@@ -59,12 +59,6 @@ pemilik Hak Cipta. \\
 
 \ifx\blank\npmDua\else\clearpage\fi
 
-% Untuk input gambar tanda tangan, silahkan sesuaikan xshift, yshift, dan width dengan gambar tanda tangan Anda
-%\begin{tikzpicture}[remember picture,overlay,shift={(current page.north east)}]
-%\node[anchor=north east,xshift=-9cm,yshift=-23.5cm]{\includegraphics[width=3cm]{assets/pics/tanda_tangan_wikipedia.png}};
-%\end{tikzpicture}
-
-
 \begin{center}
 	\vspace*{0.8cm}
 	\begin{tabular}{lll}
@@ -75,23 +69,30 @@ pemilik Hak Cipta. \\
 	\vspace*{0.2cm}
 	Yang menyatakan \\
 	\ifx\blank\npmDua
-		\vspace*{2cm}
+        % --- KASUS 1 PENULIS ---
+		\vspace*{0.5cm}
+		\includegraphics[height=1.5cm]{assets/pics/ttd_1.png}\\
 		(\penulisSatu)
 	\else
+        % --- KASUS 2 PENULIS ---
 		\begin{multicols}{2}
 			Penulis 1:\\
-			\vspace*{2cm}
+			\vspace*{0.5cm}
+			\includegraphics[height=1.5cm]{assets/pics/ttd_1.png}\\
 			(\penulisSatu)\\
 
 			Penulis 2:\\
-			\vspace*{2cm}
+			\vspace*{0.5cm}
+			\includegraphics[height=1.5cm]{assets/pics/ttd_2.png}\\
 			(\penulisDua)\\
 		\end{multicols}
 	\fi
 	\ifx\blank\npmTiga\else
+        % --- KASUS 3 PENULIS ---
 		\vspace*{0.2cm}
 		Penulis 3:\\
-		\vspace*{2cm}
+		\vspace*{0.5cm}
+		\includegraphics[height=1.5cm]{assets/pics/ttd_3.png}\\
 		(\penulisTiga)
 	\fi
 \end{center}

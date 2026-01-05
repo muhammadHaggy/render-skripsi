@@ -64,7 +64,7 @@ Komponen baru yang dikembangkan meliputi:
 %-----------------------------------------------------------------------------%
 Tantangan utama dalam implementasi ini adalah menghubungkan logika bisnis pada \f{legacy backend} (Django) dengan kemampuan komputasi pada \f{Green Engine} (Airflow). Integrasi dilakukan menggunakan pola komunikasi asinkronus berbasis API, sebagaimana digambarkan pada Gambar \ref{fig:modelIntegrasi}.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.6\textwidth]{assets/pics/model_integrasi.png}
     \caption{Model Integrasi \f{Legacy Backend} dan \f{Green Engine}}
@@ -92,7 +92,7 @@ Bagian ini membahas implementasi teknis dari "mesin" prediksi emisi yang menjadi
 
 Secara konseptual, alur kerja sistem rekomendasi rute ini tidak hanya melibatkan perhitungan jarak, tetapi juga integrasi data topologi dan prediksi. Ilustrasi cara kerja sistem dari \f{input} pengguna hingga visualisasi hasil dapat dilihat pada Gambar \ref{fig:greenRoutingWorkflow}.
 
-\begin{figure}[t!]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.3\textwidth]{assets/pics/green_routing_workflow.png}
     \caption{Alur Kerja Sistem Rekomendasi Rute (\f{Green Routing Workflow})}
@@ -110,7 +110,7 @@ Untuk menangani kompleksitas orkestrasi model yang melibatkan berbagai tahapan s
     
     \f{Pipeline} ini bertanggung jawab atas pemrosesan awal data mentah (\f{raw data}) yang dikirimkan oleh Sensor Logger. Seperti yang ditunjukkan pada Gambar \ref{fig:pipelineIngestGraph}, struktur DAG ini didesain menggunakan pola \f{Dynamic Task Mapping}.
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_ingest_graph.png}
         \caption{Visualisasi \f{Graph View} untuk \f{Pipeline Ingest} pada Apache Airflow}
@@ -129,7 +129,7 @@ Untuk menangani kompleksitas orkestrasi model yang melibatkan berbagai tahapan s
     
     \f{Pipeline} ini adalah inti dari sistem \f{Green Routing}, yang dijalankan secara \f{on-demand} ketika ada permintaan dari \f{backend}. Gambar \ref{fig:pipelineInferenceGraph} memperlihatkan struktur linear dari \f{pipeline} ini, yang menjamin urutan eksekusi logis dari pengambilan data spasial hingga perhitungan emisi.
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_inference_graph.png}
         \caption{Visualisasi \f{Graph View} untuk \f{Pipeline Inference} pada Apache Airflow}
@@ -222,7 +222,7 @@ Berbeda dengan pendekatan Markov Chain yang memodelkan probabilitas transisi ant
     \item Dataset Pengujian (\f{Testing Set}) \\
     Data diambil dari rute perjalanan keliling di wilayah sekitar Universitas Indonesia hingga area Kukusan. Pemilihan rute pengujian di lokasi yang berbeda dari data pelatihan bertujuan untuk mengevaluasi kemampuan model dalam menggeneralisasi pola \f{drive cycle} pada segmen jalan lingkungan dan perkotaan yang didominasi oleh perilaku \f{stop-and-go}. Seluruh kombinasi rute yang diambil memiliki titik awal dan titik akhir yang sama dengan varian rute yang berbeda. Adapun rute-rute diambil dari kombinasi sebagai berikut.
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/kombinasi_testing_ui.png}
         \caption{Visualisasi Kombinasi Rute Dataset Pengujian Menggunakan Google Maps}
@@ -417,7 +417,7 @@ Dengan membandingkan distribusi pada histogram ini, penelitian dapat membuktikan
 %-----------------------------------------------------------------------------%
 Tahap akhir dari implementasi sistem adalah realisasi operasional model melalui \f{task} \code{step\_05\_ml\_inference\_speed\_emission} pada \f{pipeline} Apache Airflow. Tahap ini merupakan jembatan antara model komputasi yang telah dilatih dengan skenario dunia nyata, di mana sistem melakukan simulasi \f{Green Routing} pada rute yang belum pernah diobservasi oleh model sebelumnya (\f{unseen route}).
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/dag_inference_pipeline.png}
     \caption{Visualisasi DAG \f{pipeline} inferensi}
@@ -524,7 +524,7 @@ Setelah data emisi berhasil diambil dari MinIO, Django menjalankan algoritma pen
 
 Proses optimasi melibatkan pembentukan Matriks Biaya Global (\f{global cost matrix}) berukuran $N \times N$, di mana $N$ adalah jumlah total titik (Depot + Pelanggan). Ilustrasi mekanisme pembentukan matriks dan penentuan rute dapat dilihat pada Gambar \ref{fig:costMatrixConcept}.
 
-\begin{figure}[t!]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\textwidth]{assets/pics/n_x_n_matrix.png}
     \caption{Konsep Pembangkitan Matriks Biaya $N \times N$ untuk Optimasi Multi-Tujuan}
@@ -575,7 +575,7 @@ Implementasi perangkat keras sistem IoT pada penelitian kali ini difokuskan pada
 %-----------------------------------------------------------------------------%
 Proses instalasi dilakukan dengan menempelkan perangkat keras sistem IoT dengan menggunakan \f{silicone double-sided tape} di bagian sepatbor kendaraan uji dengan tetap memperhatikan keseimbangan beban dan keamanan komponen elektronik di dalamnya. Posisi Unit Kontrol Utama diposisikan agar tepat bersentuhan dengan sepatbor dan permukaan lain di area sekitar saluran pembuangan utama kendaraan uji dan \f{Mixing Chamber} diposisikan bersudut agar dapat menghisap debit udara yang keluar dari saluran pembuangan utama kendaraan uji.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.6\textwidth]{assets/pics/ilustrasi_instalasi_mounting.png}
     \caption{Ilustrasi instalasi \f{mounting bracket} dan \f{smartphone} pada kendaraan uji}
@@ -590,7 +590,7 @@ Selain perangkat keras sistem IoT, unit \f{smartphone} juga digunakan selama pro
 %-----------------------------------------------------------------------------%
 Untuk menjamin validitas pengambilan sampel gas buang, \f{inlet} pada \f{Mixing Chamber} diposisikan sejajar dengan sumbu keluaran saluran utama pembuangan kendaraan. Pada penelitian ini, jarak antara ujung saluran utama pembuangan sepeda motor dengan \f{inlet} dari modul perangkat keras IoT diatur pada posisi tetap sejauh 15 cm untuk memungkinkan pengambilan gas buang dengan optimal tanpa khawatir dengan risiko kerusakan pada modul akibat suhu yang tinggi pada saluran utama pembuangan kendaraan.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/ilustrasi_fitment_test.png}
     \caption{Ilustrasi Proses \f{Fitment Test} Perangkat Keras IoT terhadap Motor}
@@ -647,7 +647,7 @@ Antarmuka pengguna pada aplikasi \f{Web} dikembangkan menggunakan kerangka kerja
 %-----------------------------------------------------------------------------%
 Fitur ini memungkinkan pengguna untuk menentukan fungsi tujuan (\f{objective function}) yang akan digunakan oleh algoritma optimasi di \f{backend}. Seperti yang ditunjukkan pada Gambar \ref{fig:modalPrioritas}, implementasi dilakukan menggunakan komponen \f{modal pop-up} yang muncul saat pengguna memilih opsi "Atur Pengiriman".
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{assets/pics/modal_pemilihan_prioritas.png}
     \caption{Modal Pemilihan Prioritas Optimasi pada \f{Web App}}
@@ -671,7 +671,7 @@ Ketika pengguna memilih "Optimasi Emisi", \f{frontend} akan mengirimkan paramete
 %-----------------------------------------------------------------------------%
 Setelah proses optimasi selesai, hasil perhitungan ditampilkan pada halaman detail pengiriman. Implementasi visualisasi ini menggunakan \f{library} \code{@react-google-maps/api} untuk merender peta interaktif.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/visualisasi_peta_rute.png}
     \caption{Visualisasi Peta Rute Hasil Optimasi}
@@ -680,7 +680,7 @@ Setelah proses optimasi selesai, hasil perhitungan ditampilkan pada halaman deta
 
 Gambar \ref{fig:visualisasiPeta} memperlihatkan bagaimana rute perjalanan divisualisasikan sebagai garis \f{polyline} biru yang menghubungkan titik asal (\f{Distribution Center}) dan titik tujuan pelanggan. Penanda lokasi (\f{marker}) dengan nomor urut (misalnya "1") menunjukkan urutan kunjungan yang disarankan. Selain representasi spasial, sistem juga menyajikan ringkasan metrik kinerja pada panel samping (\f{sidebar}), sebagaimana terlihat pada Gambar \ref{fig:panelInformasi}.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{assets/pics/panel_informasi.png}
     \caption{Panel Informasi Metrik Pengiriman dan Detail Truk}

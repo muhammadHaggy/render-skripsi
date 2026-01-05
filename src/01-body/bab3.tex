@@ -5,7 +5,7 @@
 
 Pada Bab Metodologi Penelitian akan dijelaskan mengenai tahapan dan prosedur yang dilakukan untuk menyelesaikan penelitian. Tahapan ini mencakup pengumpulan data berkendara untuk pelatihan model, perancangan perangkat keras IoT untuk validasi, pengembangan model \f{machine learning} dan estimasi emisi, serta integrasi sistem secara \f{end-to-end}.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{assets/pics/metodologi_penelitian.png}
     \caption{Gambaran Umum Metodologi Penelitian}
@@ -158,20 +158,20 @@ Namun, berdasarkan pengujian kelayakan teknis (\f{technical feasibility study}) 
 
 Oleh karena itu, metodologi perancangan disesuaikan menuju desain akhir (\f{final design}) yang memprioritaskan integritas data (\f{data integrity}) di atas konektivitas \f{real-time}. Arsitektur dialihkan menggunakan mekanisme \f{data logging} lokal pada SD Card.
 
-\begin{figure}[t!]
+Realisasi fisik perangkat IoT dirancang dengan memisahkan komponen elektronik yang sensitif dari jalur aliran gas panas. Seperti yang diilustrasikan pada Gambar \ref{fig:realisasiFisik}, perangkat keras terdiri dari dua modul utama yang saling terhubung: Unit Kontrol Utama (\f{Main Control Unit}) dan Ruang Pencampur (\f{Mixing Chamber}).
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{assets/pics/realisasi_fisik_iot.png}
+    \includegraphics[width=0.5\textwidth]{assets/pics/realisasi_fisik_iot.png}
     \caption{Realisasi Fisik Perangkat Keras Sistem IoT}
     \label{fig:realisasiFisik}
 \end{figure}
-
-Realisasi fisik perangkat IoT dirancang dengan memisahkan komponen elektronik yang sensitif dari jalur aliran gas panas. Seperti yang diilustrasikan pada Gambar \ref{fig:realisasiFisik}, perangkat keras terdiri dari dua modul utama yang saling terhubung: Unit Kontrol Utama (\f{Main Control Unit}) dan Ruang Pencampur (\f{Mixing Chamber}).
 
 Unit Kontrol Utama (sisi kiri pada Gambar \ref{fig:realisasiFisik}) berfungsi sebagai pusat manajemen daya dan pemrosesan data. Komponen-komponen ditempatkan di dalam \f{enclosure} terpisah untuk melindungi baterai dan mikrokontroler dari paparan panas langsung gas buang. Mikrokontroler yang digunakan dilengkapi dengan \f{shield} ekspansi untuk memudahkan konektivitas kabel menuju sensor yang ditempatkan di modul sebelah.
 
 Sedangkan \f{Mixing Chamber} yang berada di sebelah kanan dari keseluruhan sistem IoT pada Gambar \ref{fig:realisasiFisik} di atas merupakan inti dari mekanisme validasi emisi dengan desain mekanikal dirancang menyerupai terowongan angin vertikal untuk menerapkan metode \f{Constant Volume Sampling}. Mekanisme aliran udara berfungsi dengan cara mengalirkan udara dari bawah ke atas dengan menggunakan kipas yang dihubungkan langsung ke baterai bertegangan 12V stabil dan di antara kedua kipasnya terdapat sensor-sensor sebagaimana yang sudah dijelaskan sebelumnya.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/alokasi_pin_mikro.png}
     \caption{Visualisasi Alokasi Pin pada Mikrokontroler}
@@ -234,7 +234,7 @@ Nilai laju aliran ($Q_{air}$) kemudian ditentukan dengan mengkonversi waktu peng
 %-----------------------------------------------------------------------------%
 Perangkat lunak (\f{Firmware}) dikembangkan menggunakan bahasa C++ pada lingkungan Arduino IDE. Logika utama program dirancang untuk melakukan pengambilan data (\f{data acquisition}) secara periodik dengan frekuensi 1 Hz (satu data per detik) dengan memanfaatkan modul RTC.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.4\textwidth]{assets/pics/flowchart_firmware.png}
     \caption{Diagram Alur Logika \f{Firmware} Akuisisi Data}
@@ -292,7 +292,7 @@ Setelah proses kalibrasi dilakukan, diputuskan bahwa nilai $R_0$ untuk sensor MQ
 %-----------------------------------------------------------------------------%
 Pengembangan model estimasi emisi terdiri dari dua komponen utama: pembentukan siklus berkendara (\f{drive cycle generation}) menggunakan Markov Chain, dan perhitungan emisi menggunakan model MOVESTAR. Penelitian ini mengadopsi kerangka kerja \f{data-driven} yang diusulkan oleh Keskin et al. (2023) untuk membangkitkan profil kecepatan sintetis.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/visualisasi_grid_state_space.png}
     \caption{Visualisasi \f{Grid State Space Markov Chain Model}}
@@ -344,7 +344,7 @@ Pada tahap pelatihan, model \f{machine learning} dilatih menggunakan \f{dataset}
 
 Proses pelatihan diikuti dengan tahap validasi untuk mengevaluasi kemampuan generalisasi model terhadap data yang tidak digunakan selama pelatihan. Evaluasi dilakukan menggunakan metrik kesalahan regresi untuk memastikan bahwa model tidak hanya mampu menyesuaikan diri dengan data pelatihan, tetapi juga stabil terhadap variasi kondisi berkendara.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/alur_data_training.png}
     \caption{Alur Data dari Tahap Pelatihan (\f{Training})}
@@ -357,7 +357,7 @@ Proses pelatihan diikuti dengan tahap validasi untuk mengevaluasi kemampuan gene
 %-----------------------------------------------------------------------------%
 Berbeda dengan tahap pelatihan, pada tahap penerapan (\f{deployment}), model ML dioperasikan dalam skema autoregresif. Pada skema ini, prediksi kecepatan dan akselerasi pada waktu ke $t$ digunakan kembali sebagai bagian dari \f{input} untuk memprediksi kondisi pada waktu ke $t+1$. Pendekatan ini dipilih karena pembangkitan \f{driving cycle} bersifat sekuensial dan berkelanjutan, di mana kondisi kendaraan pada suatu waktu sangat dipengaruhi oleh keadaan sebelumnya. Dengan menggunakan mekanisme autoregresif, model mampu mensintesis rangkaian profil kecepatan dan akselerasi yang konsisten secara temporal, menyerupai perilaku berkendara nyata.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/alur_data_inference.png}
     \caption{Alur Data dari Tahap \f{Inference}}
@@ -620,7 +620,7 @@ Pendekatan ini memungkinkan pembangkitan profil berkendara (\f{drive cycle}) yan
 %-----------------------------------------------------------------------------%
 Model MOVESTAR (Wang et al., 2020) digunakan untuk mengestimasi emisi berdasarkan profil kecepatan yang dihasilkan.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.6\textwidth]{assets/pics/diagram_movestar.png}
     \caption{Diagram Algoritma MOVESTAR}
@@ -662,7 +662,7 @@ Keterangan variabel:
 %-----------------------------------------------------------------------------%
 Sistem yang dikembangkan dalam penelitian ini merupakan integrasi kompleks antara layanan operasional logistik (\f{legacy system}) dan arsitektur \f{Machine Learning Operations} (MLOps) modern untuk optimasi rute ramah lingkungan. Berdasarkan Gambar \ref{fig:arsitekturSistem}, arsitektur sistem terbagi menjadi empat klaster utama: \f{Frontend}, \f{Backend}, \f{Machine Learning Service} (untuk pemrosesan dimensi), dan \f{MLOps Infrastructure} (untuk prediksi emisi).
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/arsitektur_sistem.png}
     \caption{Arsitektur Sistem}
@@ -724,7 +724,7 @@ Untuk mendukung fitur baru \f{Green} VRPTW, diterapkan arsitektur MLOps mengguna
 \begin{enumerate}
     \item \f{Pipeline} Data (\f{Ingest})
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_ingest.png}
         \caption{\f{Technical Flow Pipeline Ingest Data}}
@@ -737,7 +737,7 @@ dan diselaraskan dengan jaringan jalan (\f{map matching}) sebelum disimpan ke Mi
 
     \item \f{Pipeline} Pelatihan (\f{Training})
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_training_data.png}
         \caption{\f{Technical Flow Pipeline Training Data}}
@@ -756,7 +756,7 @@ dan diselaraskan dengan jaringan jalan (\f{map matching}) sebelum disimpan ke Mi
     
     Didefinisikan dalam DAG \code{03\_inference\_pipeline.py}, \f{pipeline} ini dijalankan secara \f{on-demand} untuk melayani permintaan rute dari pengguna:
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_inference.png}
         \caption{\f{Technical Flow Pipeline Inference}}
@@ -783,7 +783,7 @@ Sistem MLOps ini terdiri dari empat komponen utama: Apache Airflow, MinIO Object
 \begin{enumerate}
     \item \f{Pipeline} Data (\f{Ingest})
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_data_ml_pembanding.png}
         \caption{\f{Technical Flow Pipeline Data} ML Pembanding}
@@ -794,7 +794,7 @@ Sistem MLOps ini terdiri dari empat komponen utama: Apache Airflow, MinIO Object
     
     \item \f{Pipeline} Pelatihan (\f{Training})
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=0.8\textwidth]{assets/pics/pipeline_training_ml_pembanding.png}
         \caption{\f{Technical Flow Pipeline Training Data} ML Pembanding}
@@ -815,7 +815,7 @@ Sistem MLOps ini terdiri dari empat komponen utama: Apache Airflow, MinIO Object
     
     \item \f{Pipeline} Inferensi dan Integrasi
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/pipeline_inference_ml_pembanding.png}
         \caption{\f{Technical Flow Pipeline Inference} pada ML pembanding}
@@ -929,7 +929,7 @@ Untuk menjamin keamanan instrumen dan validitas data, ditetapkan rute uji spesif
 \begin{figure}[t!]
     \centering
     % Pastikan nama file gambar sesuai dengan yang Anda simpan di folder assets
-    \includegraphics[width=0.5\textwidth]{assets/pics/rute_uji_validasi_fasilkom_felfest.jpeg}
+    \includegraphics[width=0.3\textwidth]{assets/pics/rute_uji_validasi_fasilkom_felfest.jpeg}
     \caption{Peta Rute Uji Validasi (Gedung Lama Fasilkom - Felfest UI)}
     \label{fig:ruteUjiValidasi}
 \end{figure}

@@ -9,10 +9,6 @@
 \chapter*{\uppercase{Halaman Pernyataan Orisinalitas}}
 \vspace*{2cm}
 
-% Untuk input gambar tanda tangan, silahkan sesuaikan xshift, yshift, dan width dengan gambar tanda tangan Anda
-%\begin{tikzpicture}[remember picture,overlay,shift={(current page.north east)}]
-%\node[anchor=north east,xshift=-8.5cm,yshift=-14.2cm]{\includegraphics[width=3cm]{assets/pics/tanda_tangan_wikipedia.png}};
-%\end{tikzpicture}
 \pagestyle{onlypage}
 
 \begin{center}
@@ -25,30 +21,33 @@
 
 	\begin{tabular}{l c l}
 	\ifx\blank\npmDua
+
 	\bo{Nama} & : & \bo{\penulisSatu} \\
 	\bo{NPM} & : & \bo{\npmSatu} \\
-	\bo{Tanda Tangan} & : & \\
+	\bo{Tanda Tangan} & : & \raisebox{-0.5\height}{\includegraphics[height=1.5cm]{assets/pics/ttd_1.png}} \\
 	& & \\
 	& & \\
 	\else
+	
 	\bo{Nama Penulis 1} & : & \bo{\penulisSatu} \\
 	\bo{NPM Penulis 1} & : & \bo{\npmSatu} \\
-	\bo{Tanda Tangan Penulis 1} & : & \\
+	\bo{Tanda Tangan Penulis 1} & : & \raisebox{-0.5\height}{\includegraphics[height=1.5cm]{assets/pics/ttd_1.png}} \\
 	& & \\
-	& & \\
+	
 	\bo{Nama Penulis 2} & : & \bo{\penulisDua} \\
 	\bo{NPM Penulis 2} & : & \bo{\npmDua} \\
-	\bo{Tanda Tangan Penulis 2} & : & \\
-	& & \\
+	\bo{Tanda Tangan Penulis 2} & : & \raisebox{-0.5\height}{\includegraphics[height=1.5cm]{assets/pics/ttd_2.png}} \\
 	& & \\
 	\fi
+	
 	\ifx\blank\npmTiga\else
+
 	\bo{Nama Penulis 3} & : & \bo{\penulisTiga} \\
 	\bo{NPM Penulis 3} & : & \bo{\npmTiga} \\
-	\bo{Tanda Tangan Penulis 3} & : & \\
-	& & \\
+	\bo{Tanda Tangan Penulis 3} & : & \raisebox{-0.5\height}{\includegraphics[height=1.5cm]{assets/pics/ttd_3.png}} \\
 	& & \\
 	\fi
+	
 	\bo{Tanggal} & : & \bo{\tanggalSiapSidang} \\
 	\end{tabular}
 \end{center}

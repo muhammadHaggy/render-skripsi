@@ -48,6 +48,7 @@ Dalam penelitian ini, ada beberapa batasan dan juga asumsi yang digunakan dalam 
     \item Perangkat keras untuk \f{inference} model \f{machine learning} dan algoritma pendukung (PointOps) menggunakan server dengan GPU NVIDIA GeForce GT 1030.
     \item Pengumpulan data kinematik kendaraan (kecepatan, akselerasi) menggunakan \f{smartphone} dengan aplikasi Sensor Logger yang dipasang pada \f{fixed bracket} agar orientasi sensor mengikuti orientasi kendaraan.
     \item Pengukuran data emisi riil menggunakan sensor IoT yang dipasang pada saluran pembuangan (knalpot) dengan asumsi laju aliran udara (\f{flow rate}) konstan yang dihasilkan oleh kipas \f{blower}.
+    \item Penelitian ini memiliki batasan pada rentang pengukuran gas Karbon Monoksida (CO) dengan menggunakan sensor MQ-7 yang memiliki batas deteksi maksimal sebesar 2.000 ppm. Meskipun Peraturan Menteri LHK No. 8 Tahun 2023 mensyaratkan rentang pengukuran hingga 9,99\% volume (setara ~99.900 ppm) untuk alat uji emisi standar, penggunaan sensor MQ-7 dalam penelitian ini difokuskan sebagai indikator awal (early detection) pada kendaraan dengan emisi rendah atau untuk menguji fungsionalitas sistem transmisi data secara nirkabel.
     \item Pengukuran data emisi riil menggunakan sensor IoT diasumsikan berada pada kondisi temperatur udara ruang sensor yang ideal (sekitar 25$^{\circ}$C) untuk menjaga stabilitas pembacaan sensor.
     \item Perpindahan data dari sistem IoT ke sistem MLOps masih belum bisa dilakukan secara \textit{real-time} dan untuk saat ini masih menggunakan metode manual dengan cara memindahkan data dari SD Card ke komputer baru kemudian diolah.
     \item Pengukuran suhu sistem IoT menggunakan \textit{thermogun} yang diarahkan ke permukaan sistem IoT yang ingin dilakukan pengecekan serta pengukuran suhu lingkungan dilakukan dengan menggunakan \textit{thermometer} raksa.
@@ -83,7 +84,7 @@ Posisi penelitian saat ini (Haggy, Navis, dan Shafa, 2025) adalah memperluas kap
 
 Untuk memperjelas alur evolusi dan integrasi antar penelitian tersebut, berikut pada Gambar \ref{fig:posisiPenelitian} merupakan visualisasi dari posisi penelitian yang dilakukan.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.8\textwidth]{assets/pics/posisi_penelitian.png}
     \caption{Posisi Penelitian}

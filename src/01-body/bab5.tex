@@ -20,7 +20,7 @@ Pada tahap ini, dilakukan evaluasi terhadap lima algoritma \f{machine learning} 
 \subsubsection{Analisis Algoritma untuk Memprediksi \f{Speed}}
 \label{sec:analisisSpeed}
 %-----------------------------------------------------------------------------%
-\begin{figure}[t!]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{assets/pics/tabel_perbandingan_model.png}
     \caption{Tabel perbandingan metrik evaluasi model ML (Speed)}
@@ -42,7 +42,7 @@ Apabila dibandingkan dengan SVR yang memiliki $R^2$ stabil sebesar 0,9776, RF me
 %-----------------------------------------------------------------------------%
 Untuk menjamin bahwa model tidak hanya akurat secara statistik tetapi juga konsisten secara fisik, dilakukan validasi terhadap akselerasi turunan (\f{derived acceleration}). Hasil menunjukkan bahwa profil kecepatan yang dibangkitkan oleh model terbaik mampu menghasilkan nilai akselerasi dengan skor $R^2$ sebesar 0.8498 dan RMSE 0.2565 $m/s^2$. Capaian ini membuktikan bahwa mekanisme autoregresif yang dikembangkan berhasil menjaga kontinuitas temporal antar-detik, sehingga profil \f{drive cycle} yang dihasilkan tidak memiliki lonjakan kecepatan yang tidak realistis.
 
-\begin{figure}[t!]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=1\textwidth]{assets/pics/result_accel_rf.png}
     \caption{Gambar Grafik Perbandingan Hasil Prediksi Akselerasi vs Ground Truth}
@@ -61,7 +61,7 @@ Berdasarkan perbandingan metrik pada Gambar \ref{fig:perbandinganModel}, diperol
 
     \item Sensitivitas RMSE terhadap Estimasi Emisi MOVESTAR \\
     
-    \begin{figure}[t!]
+    \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\textwidth]{assets/pics/hasil_rf.png}
     \caption{Hasil Akurasi Random Forest}
@@ -90,7 +90,7 @@ Selain itu, mekanisme \f{ensemble} berbasis \f{bootstrap aggregation} (\f{baggin
     \label{tab:evaluasiAkurasiEmisi}
     \begin{tabular}{|l|l|l|l|}
         \hline
-        \bo{Parameter Evaluasi} & \bo{Ground Truth} & \bo{Model ML (Random Forest)} & \bo{Model Markov Chain} \\
+        \bo{Parameter Evaluasi} & \bo{Ground Truth} & \bo{Random Forest} & \bo{Markov Chain} \\
         \hline
         Kecepatan Rata-rata & 25,19 km/jam & 24,78 km/jam & 23,20 km/jam \\
         \hline
@@ -105,7 +105,7 @@ Selain itu, mekanisme \f{ensemble} berbasis \f{bootstrap aggregation} (\f{baggin
 
 Berdasarkan Tabel \ref{tab:evaluasiAkurasiEmisi}, model \f{machine learning} menunjukkan keunggulan dalam mereplikasi karakteristik profil kecepatan. Model ML mampu memprediksi kecepatan rata-rata dengan deviasi yang sangat minim, yakni hanya selisih 0,41 km/jam dari data asli. Sebaliknya, model Markov Chain memiliki deviasi yang lebih besar (1,99 km/jam), cenderung menghasilkan profil kecepatan yang lebih rendah dari kenyataan.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/compare_speed.png}
     \caption{Prediksi Kecepatan Detik per Detik dengan \f{Machine Learning}}
@@ -130,14 +130,14 @@ Evaluasi ini berfokus pada tiga variabel utama pembentuk emisi, yaitu kecepatan 
 \subsubsection{Analisis Distribusi Kecepatan}
 \label{sec:analisisDistribusiKecepatan}
 %-----------------------------------------------------------------------------%
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.4\textwidth]{assets/pics/distribusi_kecepatan_mcm.png}
     \caption{Gambar Distribusi Kecepatan dari Pendekatan MCM}
     \label{fig:distribusiKecepatanMCM}
 \end{figure}
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.4\textwidth]{assets/pics/distribusi_kecepatan_ml.png}
     \caption{Gambar Distribusi Kecepatan dari Pendekatan ML}
@@ -182,14 +182,14 @@ Distribusi \f{Vehicle Specific Power} (VSP) merupakan aspek evaluasi yang paling
 
 Studi-studi terbaru menunjukkan bahwa VSP merupakan prediktor yang kuat terhadap variasi emisi kendaraan modern. Sebagai contoh, penelitian Gao et al. (2023) menunjukkan bahwa VSP mampu menjelaskan proporsi terbesar variasi emisi \ce{CO2}, CO, dan $NO_x$ dibandingkan variabel kecepatan atau akselerasi secara individual, sehingga pendekatan berbasis VSP \f{bins} tetap unggul untuk estimasi emisi makroskopik. Temuan serupa diperkuat oleh Adeeb et al. (2025) yang menggunakan teknik \f{unsupervised learning} untuk memodelkan emisi berdasarkan klaster VSP dan menunjukkan bahwa transisi antar-rentang VSP berkorelasi langsung dengan lonjakan emisi sesaat pada kondisi akselerasi tinggi. Selain itu, penelitian Wang et al. (2020) menunjukkan bahwa meskipun terdapat variasi kecil dalam emisi pada VSP yang sama, distribusi frekuensi VSP tetap merupakan representasi terbaik dari beban mesin untuk model-model inventarisasi emisi.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.4\textwidth]{assets/pics/distribusi_vsp_mcm.png}
     \caption{Gambar Distribusi VSP pada pendekatan Markov Chain}
     \label{fig:distribusiVSPMCM}
 \end{figure}
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.4\textwidth]{assets/pics/distribusi_vsp_ml.png}
     \caption{Gambar Distribusi VSP pada pendekatan ML}
@@ -210,7 +210,7 @@ Perbedaan RMSE antara Markov dan ML berdampak langsung pada kualitas estimasi em
 
 \begin{enumerate}
     \item ML menghasilkan estimasi emisi yang lebih stabil dan mendekati kondisi nyata, karena distribusi VSP-nya nyaris identik dengan data riil. Tidak hanya itu, estimasi VSP secara detik per detik pun cukup mendekati \f{ground truth}.
-    \begin{figure}[t!]
+    \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/compare_vsp.png}
     \caption{Prediksi VSP Detik per Detik dengan \f{Machine Learning}}
@@ -313,7 +313,7 @@ Tujuan evaluasi kinerja sistem perangkat keras IoT adalah memverifikasi bahwa pe
 %-----------------------------------------------------------------------------%
 Berdasarkan analisis \f{log} data yang didapat dari pengujian lapangan, sistem manajemen daya terbukti dapat mendukung operasional dengan durasi panjang. Data rekaman hasil pengujian pada tanggal 13 November 2025 menunjukkan sistem IoT mampu beroperasi secara kontinu selama 1 jam di mana untuk pertama kalinya, sistem IoT beroperasi pada pukul 15:44:55 dan berakhir pada 17:04:24 berdasarkan waktu sistem IoT dengan menggunakan modul RTC tanpa ada interupsi.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/tangkapan_layar_pengujian.png}
     \caption{Tangkapan Layar Permulaan dan Akhir dari Pengujian Pada Tanggal 13 November 2025}
@@ -344,7 +344,7 @@ Namun selama proses pengujian, terjadi insiden berupa sistem IoT tidak kuat mere
 
 Selama proses pengujian sistem IoT dan pengambilan data, sistem IoT dapat berjalan secara optimal tanpa adanya gangguan stabilitas sistem yang terjadi akibat suhu lingkungan. Hal tersebut dibuktikan dari hasil pengujian suhu sistem IoT sebagaimana yang menghasilkan data sebagai berikut.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/inout_indoor.png}
     \caption{Hasil Pembacaraan Thermometer Pada Kipas Intake (Kiri) dan Exhaust (Kanan) pada Suhu Ruangan}

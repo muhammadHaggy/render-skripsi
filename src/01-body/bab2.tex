@@ -96,7 +96,7 @@ Untuk membangkitkan \f{custom drive cycle} tersebut, digunakan model Markov Chai
     \item Definisi Ruang Keadaan (\f{state space}) \\
     Keadaan (\f{state}) didefinisikan oleh pasangan karakteristik kecepatan (s) dan percepatan (a). Ruang keadaan dibentuk menggunakan peta kisi (\f{grid map}) dengan interval tertentu (misalnya interval kecepatan 2.5 km/jam dan interval percepatan 0.25 m/s\textsuperscript{2}). Setiap sel dalam kisi ini mewakili satu keadaan unik Xj.
     
-    \begin{figure}[t!]
+    \begin{figure}
         \centering
         \includegraphics[width=\textwidth]{assets/pics/visualisasi_grid_state_space.png}
         \caption{Visualisasi \f{State Space} dengan \f{Grid}}
@@ -330,7 +330,7 @@ Dalam rangka menentukan mikrokontroler yang cocok untuk mengembangkan \textit{pr
     \item UNO R4 WiFi dan UNO R3 \\
     Perbandingan pertama antara UNO R4 WiFi dengan pendahulunya, UNO R3, yang memiliki \textit{form factor} identik. UNO R4 WiFi yang menggunakan prosesor Renesas RA4M1 yang berarsitektur ARM Cortex-M4 32-bit memiliki peningkatan yang signifikan dari UNO R3 yang masih menggunakan prosesor berbasis AVR ATMega328P 8-bit. Karenanya, UNO R4 WiFi memiliki kemampuan untuk melakukan operasi yang lebih kompleks dibanding UNO R3. Salah satu poin lain yang signifikan ada pada \textit{clock speed} kedua prosesor tersebut di mana Renesas RA4M1 beroperasi dengan \textit{clock speed} 48MHz dibandingkan ATMega328P yang hanya beroperasi dengan \textit{clock speed} 16MHz.
 
-    \begin{figure}[t!]
+    \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/fisikR3R4.jpg}
     \caption{Tampilan Fisik UNO R4 WiFi (atas) dan UNO R3 (bawah)}
@@ -340,7 +340,7 @@ Dalam rangka menentukan mikrokontroler yang cocok untuk mengembangkan \textit{pr
     \item UNO R4 WiFi dan MEGA 2560 \\
     Perbandingan selanjutnya dilakukan dengan membandingkan UNO R4 WiFi dengan satu \textit{platform} yang juga dikembangkan oleh Arduino dan terkenal dengan kompatibilitasnya yang lebih baik dalam mendukung pengembangan proyek IoT yang lebih kompleks, yaitu MEGA 2560. MEGA 2560 memiliki empat \textit{port Hardware Serial} (UART) yang lebih dapat memadai kebutuhan akan komunikasi simultan dengan banyak modul sekaligus. Namun, MEGA 2560 masih menggunakan prosesor dengan basis AVR ATMega2560 yang beroperasi pada \textit{clock speed} lebih rendah dari Renesas RA4M1. Prosesor MEGA 2560 yang berbasis 8-bit juga tidak bisa menjalankan operasi sekompleks yang bisa dijalankan oleh prosesor UNO R4 WiFi yang berbasis 32-bit. Pertimbangan lain yang menjadi poin pendukung tidak dipilihnya MEGA 2560 ada pada dimensinya yang masif sehingga membutuhkan \textit{enclosure} yang lebih besar. Hal ini berlawanan dengan konsep \textit{mobility} dari sistem yang dikembangkan. Atas pertimbangan fisik dan performa tersebut, UNO R4 WiFi dinilai memiliki kelebihan yang signifikan dibanding MEGA 2560.
 
-    \begin{figure}[t!]
+    \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/mega2560.jpg}
     \caption{Tampilan Fisik Arduino MEGA 2560}
@@ -354,7 +354,7 @@ Dalam rangka menentukan mikrokontroler yang cocok untuk mengembangkan \textit{pr
 
     UNO R4 WiFi memiliki \textit{voltage regulator} terintegrasi yang dapat mengatur tegangan daya yang dapat mengkonversi daya yang masuk ke sistem yang dikembangkan dari sistem catu daya untuk dialurkan ke modul dan sensor yang terintegrasi menjadi 3.3V dan 5V sesuai dengan kebutuhannya tanpa adanya sistem pengaturan daya secara terpisah. Berbeda dengan ESP32 yang hanya bisa menyuplai dan beroperasi pada daya sebesar 3.3V saja, dan di atas itu diperlukan sistem pengaturan kelistrikan yang kompleks sehingga hanya dalam rangka penyaluran daya pun memerlukan kompleksitas regulasi yang lebih tinggi. 
 
-    \begin{figure}[t!]
+    \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/esp32.jpg}
     \caption{Tampilan Fisik ESP32}
@@ -372,7 +372,7 @@ Dalam rangka menentukan mikrokontroler yang cocok untuk mengembangkan \textit{pr
 %-----------------------------------------------------------------------------%
 NoLogo Tech UNO R4 WiFi dipilih sebagai mikrokontroler utama pada penelitian ini dan mikrokontroler tersebut merupakan \f{clone} dari sebuah model sistem \f{open-source} Arduino UNO R4 WiFi. Meskipun begitu, tidak ada pengubahan spesifikasi utama antara arsitektur milik Arduino dengan apa yang dibuat oleh NoLogo Tech. Hanya saja, NoLogo Tech lebih banyak tersedia di \f{marketplace} di Indonesia dengan harga yang lebih terjangkau ketimbang mikrokontroler yang terdapat logo Arduino di dalamnya.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/diagram_UNO_R4_Wifi_NOLOGOTech.jpg}
     \caption{Visualisasi Arsitektur NoLogo Tech UNO R4 WiFi}
@@ -399,7 +399,7 @@ Akurasi data emisi sangat bergantung pada pemilihan teknologi sensor yang tepat.
 %-----------------------------------------------------------------------------%
 Sensor MQ-2 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi dengan cara memanfaatkan proses perubahan konduktivitas listrik pada material semikonduktor timah oksida (\ce{SnO2}) yang dipicu oleh reaksi reduksi-oksidasi (redoks) antara gas target dengan oksigen yang berkenaan dengan permukaan elemen pemanas pada sensor untuk dapat mendeteksi gas Hidrokarbon (HC) yang tidak terbakar secara sempurna dalam proses kombusi di dalam mesin dan sensitif akan gas hidrokarbon seperti metana, propana, dan n-butana dengan sensitivitas 300 hingga 10.000 ppm pada setiap volumenya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -20$^{\circ}$C hingga 50$^{\circ}$C sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin yang mengeluarkan uap panas.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotMQ2.jpg}
     \caption{Tampilan Fisik Sensor DFRobot MQ-2}
@@ -414,7 +414,7 @@ Sensor MQ-2 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi
 %-----------------------------------------------------------------------------%
 Sensor MQ-7 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi dengan cara memanfaatkan proses perubahan konduktivitas listrik pada material semikonduktor timah oksida (\ce{SnO2}) yang dipicu oleh reaksi reduksi-oksidasi (redoks) antara gas target dengan oksigen yang berkenaan dengan permukaan elemen pemanas pada sensor untuk dapat mendeteksi gas Karbon Monoksida (CO) yang dihasilkan dari pembakaran yang tidak sempurna dalam proses kombusi di dalam mesin dan sensitif akan gas karbon monoksida dengan sensitivitas 20 hingga 2.000 ppm pada setiap volume-nya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -20$^{\circ}$C hingga 50$^{\circ}$C sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin yang mengeluarkan uap panas.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotMQ7.jpg}
     \caption{Tampilan Fisik Sensor DFRobot MQ-7}
@@ -429,7 +429,7 @@ Sensor MQ-7 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi
 %-----------------------------------------------------------------------------%
 Sensor Karbon Dioksida yang digunakan merupakan sebuah sensor dengan mekanisme optik \f{Non-Dispersive Infrared} (NDIR) yang berfungsi dengan cara memanfaatkan prinsip penyerapan gelombang cahaya inframerah pada panjang gelombang spesifik oleh molekul gas untuk dapat mendeteksi gas Karbon Dioksida (\ce{CO2}) yang merupakan produk utama dari proses pembakaran sempurna di dalam mesin dan memiliki selektivitas tinggi terhadap gas karbon dioksida dengan rentang deteksi 0 hingga 50.000 ppm pada setiap volume-nya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -10$^{\circ}$C hingga 50$^{\circ}$C serta memiliki ketahanan terhadap interferensi uap air, sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotCO2.png}
     \caption{Tampilan Fisik Sensor DFRobot NIDR \ce{CO2} Sensor}
@@ -464,7 +464,7 @@ Dalam rangka memberikan riwayat pencatatan data yang runtut secara kronologis, d
 %-----------------------------------------------------------------------------%
 Sistem IoT akan dipasangkan dekat dengan saluran gas buang utama kendaraan. Teknik pengambilan data ini menggunakan konsep \f{random sampling} di mana sistem IoT memanfaatkan mekanisme kipas untuk mengambil kondisi atmosfer di sekitar saluran pembuangan kendaraan. Kipas yang digunakan berukuran 4 cm * 4 cm * 1 cm dan beroperasi dengan kelistrikan 12 V DC dan memiliki kecepatan maksimal di 6450 RPM (\f{rotation per minute}) secara konstan tanpa adanya kemungkinan untuk mengubah variabel konstanta tersebut secara manual.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{assets/pics/jarakKipas.jpg}
     \caption{Posisi Penempatan Kipas dari Sistem IoT Terhadap Saluran Pembuangan Hasil Pembakaran}
@@ -481,7 +481,7 @@ Tantangan utama dalam pengukuran emisi menggunakan sensor gas portabel adalah me
 %-----------------------------------------------------------------------------%
 Validitas asumsi bahwa "kecepatan putar konstan menghasilkan laju aliran konstan" didasarkan pada Hukum Afinitas Kipas (\f{Fan Affinity Laws}). Bhattacharjee (2012) memberikan derivasi hukum ini menggunakan pendekatan \f{Hard Sphere Collision Model} dan teori kinetik, yang memandang interaksi antara baling-baling kipas dan molekul udara sebagai tumbukan fisik, bukan dinamika fluida yang kompleks.
 
-\begin{figure}[t!]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{assets/pics/korelasi_airflow_rpm.png}
     \caption{Visualisasi Korelasi Laju Aliran Udara dan Kecepatan Rotasi Kipas}
