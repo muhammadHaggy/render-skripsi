@@ -1,0 +1,945 @@
+%-----------------------------------------------------------------------------%
+\chapter{\babTiga}
+\label{bab:3}
+%-----------------------------------------------------------------------------%
+
+Pada Bab Metodologi Penelitian akan dijelaskan mengenai tahapan dan prosedur yang dilakukan untuk menyelesaikan penelitian. Tahapan ini mencakup pengumpulan data berkendara untuk pelatihan model, perancangan perangkat keras IoT untuk validasi, pengembangan model \f{machine learning} dan estimasi emisi, serta integrasi sistem secara \f{end-to-end}.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/pics/metodologi_penelitian.png}
+    \caption{Gambaran Umum Metodologi Penelitian}
+    \label{fig:metodologipenelitian}
+\end{figure}
+%-----------------------------------------------------------------------------%
+\section{Tahapan Pengumpulan Data}
+\label{sec:tahapanPengumpulanData}
+%-----------------------------------------------------------------------------%
+Tahap awal penelitian berfokus pada akuisisi data primer yang krusial untuk dua tujuan utama: (1) sebagai data latih (\f{training data}) bagi model Markov Chain dalam membangkitkan siklus berkendara (\f{drive cycle}) sintetis, dan (2) sebagai data validasi (\f{ground truth}) untuk menguji akurasi estimasi emisi model MOVESTAR. Pengumpulan data dilakukan secara komprehensif mencakup data kinematik kendaraan dan data emisi gas buang secara simultan.
+
+
+%-----------------------------------------------------------------------------%
+\subsection{Rancangan Perangkat Keras}
+\label{sec:rancanganPerangkatKeras}
+% Hal baru di template 2017
+%-----------------------------------------------------------------------------%
+Objek kendaraan yang digunakan dalam penelitian ini adalah satu unit sepeda motor Yamaha NMAX 155 Connected ABS. Kendaraan ini dipilih sebagai representasi armada logistik untuk studi kasus validasi model. Rincian spesifikasi teknis kendaraan yang digunakan dalam eksperimen dapat dilihat pada Tabel \ref{tab:specs_nmax}.
+
+\begin{table}[h!]
+\centering
+\caption{Spesifikasi Teknis Yamaha NMAX 155 Connected ABS}
+\label{tab:specs_nmax}
+% Memberi jarak antar baris agar tulisan tidak berhimpitan
+\renewcommand{\arraystretch}{1.2} 
+% Menggunakan p{lebar} agar teks otomatis wrap ke bawah jika kepanjangan
+% Total lebar = 2.5 + 5.5 + 6.5 = 14.5 cm (Pas untuk A4 margin standar)
+\begin{tabular}{|p{2.5cm}|p{5.5cm}|p{6.5cm}|}
+\hline
+\textbf{Kategori} & \textbf{Parameter} & \textbf{Spesifikasi} \\ \hline
+
+\textbf{Mesin} 
+ & Tipe Mesin & \textit{Liquid cooled 4-stroke}, SOHC \\ \cline{2-3} 
+ & Jumlah Silinder & \textit{Single Cylinder} \\ \cline{2-3} 
+ & Kapasitas Mesin & 155 cc \\ \cline{2-3} 
+ & Diameter $\times$ Langkah & 58,0 mm $\times$ 58,7 mm \\ \cline{2-3} 
+ & Perbandingan Kompresi & 11,6 : 1 \\ \cline{2-3} 
+ & Daya Maksimum & 11,3 kW / 8000 rpm \\ \cline{2-3} 
+ & Torsi Maksimum & 13,9 Nm / 6500 rpm \\ \cline{2-3} 
+ & Sistem Bahan Bakar & FI (\textit{Fuel Injection}) \\ \cline{2-3} 
+ & Tipe Transmisi & \textit{V-belt Automatic} \\ \hline
+
+\textbf{Dimensi} 
+ & P $\times$ L $\times$ T & 1935 $\times$ 740 $\times$ 1160 mm \\ \cline{2-3} 
+ & Jarak sumbu roda & 1340 mm \\ \cline{2-3} 
+ & Jarak terendah ke tanah & 124 mm \\ \cline{2-3} 
+ & Berat isi & 132 kg \\ \cline{2-3} 
+ & Kapasitas tangki & 7,1 L \\ \hline 
+
+\textbf{Rangka} 
+ & Tipe Rangka & \textit{Underbone} \\ \cline{2-3} 
+ & Ban Depan & 110/70 - 13 M/C 48P \\ \cline{2-3} 
+ & Ban Belakang & 130/70 - 13 M/C 63P \\ \hline
+
+\end{tabular}
+\end{table}
+
+Selain spesifikasi kendaraan, karakteristik bahan bakar juga dicatat untuk menjaga konsistensi eksperimen. Kendaraan uji menggunakan bahan bakar jenis Bensin RON 92 (Pertamina Pertamax) yang sesuai dengan rasio kompresi mesin 11,6:1 untuk memastikan pembakaran yang optimal. Spesifikasi esensial bahan bakar disajikan pada Tabel \ref{tab:specs_fuel}. Nilai berat jenis (\textit{density}) menjadi parameter penting dalam konversi volume bahan bakar menjadi massa karbon secara teoritis.
+
+\begin{table}[h!]
+\centering
+\caption{Spesifikasi Bahan Bakar Pertamina Pertamax}
+\label{tab:specs_fuel}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Karakteristik} & \textbf{Satuan} & \textbf{Batasan / Nilai} \\ \hline
+Bilangan Oktana Riset (RON) & - & Min. 92,0 \\ \hline
+Berat Jenis (pada suhu 15$^{\circ}$C) & kg/m$^3$ & 715 - 770 \\ \hline
+Kandungan Sulfur & \% m/m & Max. 0,05 \\ \hline
+Kandungan Timbal (Pb) & g/l & Max. 0,013 \\ \hline
+Kandungan Benzena & \% v/v & Max. 5,0 \\ \hline
+Warna & Visual & Biru (Jernih \& Terang) \\ \hline
+\end{tabular}
+\end{table}
+
+Penting untuk dicatat bahwa meskipun data spesifikasi kendaraan dan bahan bakar di atas mendefinisikan karakteristik fisik objek eksperimen, perhitungan beban mesin (\textit{Vehicle Specific Power}) dalam model MOVESTAR pada penelitian ini tetap menggunakan parameter koefisien \textit{default} untuk kategori sepeda motor (\textit{motorcycle}). Data spesifikasi ini disajikan untuk keperluan transparansi kondisi eksperimental dan validasi lapangan.
+
+Untuk merekam data kinematik (kecepatan, akselerasi, dan posisi GPS), digunakan perangkat \textit{smartphone} yang telah terinstal aplikasi Sensor Logger. Perangkat ini dipasang menggunakan penyangga tetap (\textit{fixed bracket}) yang melekat kuat pada kaca spion motor. Metode pemasangan ini dipilih untuk memastikan orientasi sensor \textit{accelerometer} pada \textit{smartphone} tetap stabil dan selaras dengan orientasi pergerakan kendaraan, sehingga meminimalisir \textit{noise} data yang disebabkan oleh getaran mesin berlebih atau perubahan posisi perangkat selama pengambilan data berlangsung.
+%-----------------------------------------------------------------------------%
+\subsection{Skenario Pengambilan Data Berkendara}
+\label{sec:skenarioPengambilanDataBerkendara}
+%-----------------------------------------------------------------------------%
+Pengambilan data dilakukan melalui serangkaian uji jalan (\f{road test}) dengan rute acak yang mencakup wilayah Depok dan sekitarnya. Pemilihan rute acak ini bertujuan untuk menangkap variabilitas kondisi jalan yang realistis (seperti kontur jalan, kepadatan lalu lintas, dan lampu merah) yang akan dihadapi oleh armada logistik dalam operasional nyata. Durasi dan jarak total pengambilan data disesuaikan untuk mendapatkan jumlah sampel yang cukup bagi pelatihan model-model \f{machine learning}.
+
+Untuk memperkaya variasi data pada ruang keadaan (\f{state space}) model Markov Chain, pengemudian dilakukan dengan dua gaya berkendara (\f{driving style}) yang berbeda:
+
+\begin{enumerate}
+    \item \f{Normal Driving} \\
+    Pengemudian dilakukan dengan akselerasi dan pengereman yang halus, mengikuti aliran lalu lintas umum. Mode ini merepresentasikan kondisi operasional standar di mana efisiensi bahan bakar cenderung terjaga.
+    
+    \item \f{Aggressive Driving} \\
+    Pengemudian dilakukan dengan akselerasi mendadak (\f{hard acceleration}) dan pengereman keras (\f{hard braking}), serta perpindahan kecepatan yang dinamis. Mode ini merepresentasikan skenario logistik di bawah tekanan waktu atau kondisi lalu lintas yang memaksa mesin bekerja pada beban tinggi, yang berpotensi menghasilkan emisi lebih besar.
+\end{enumerate}
+
+Kombinasi kedua gaya berkendara ini penting agar model \f{drive cycle generation} mampu memprediksi berbagai kemungkinan skenario kecepatan yang mungkin terjadi dalam perhitungan rute logistik yang sebenarnya.
+
+%-----------------------------------------------------------------------------%
+\section{Perancangan Perangkat IoT untuk Validasi Emisi}
+\label{sec:perancanganIoT}
+%-----------------------------------------------------------------------------%
+
+Untuk memvalidasi hasil estimasi model komputasi, dirancang sebuah sistem pemantauan emisi portabel atau \f{Portable Emission Measurement System} yang dipasang pada bagian belakang kendaraan. Perangkat ini berfungsi merekam konsentrasi gas buang secara \f{real-time} ke media penyimpanan lokal.
+
+%-----------------------------------------------------------------------------%
+\subsection{Spesifikasi Perangkat Keras}
+\label{sec:skenarioPerangkatKeras}
+% Hal baru di template 2017
+%-----------------------------------------------------------------------------%
+Sistem pengukuran emisi ini dibangun menggunakan platform mikrokontroler berbasis arsitektur ARM 32-bit berbasis prosesor Renesas RA4M1 pada mikrokontroler NoLogo Tech UNO R4 WiFi sebagaimana yang sudah dijelaskan pada bab sebelumnya.
+
+\begin{table}[h!]
+    \centering
+    \caption{Daftar Spesifikasi Komponen Perangkat Keras IoT}
+    \label{tab:komponenHardware}
+    % Menambah jarak antar baris agar tulisan tidak terlalu rapat
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{|p{0.4\textwidth}|p{0.55\textwidth}|}
+        \hline
+        \centering \textbf{Komponen Utama} & \centering \textbf{Model / Spesifikasi} \tabularnewline
+        \hline
+        Mikrokontroler & NoLogo Tech UNO R4 WiFi \\
+        \hline
+        Sensor Karbon Dioksida (\ce{CO2}) & DFRobot Gravity: UART Infrared \ce{CO2} Sensor (0-50000ppm) \\
+        \hline
+        Sensor Karbon Monoksida (CO) & DFRobot Gravity: Analog CO Sensor (MQ-7) \\
+        \hline
+        Sensor Hidrokarbon (HC) & DFRobot Gravity: Analog HC Sensor (MQ-2) \\
+        \hline
+        \textit{Datalogger Shield} & Generic XD-204 Data Logging Shield \\
+        \hline
+        \textit{Real-Time Clock} (RTC) & DS1307 Module \\
+        \hline
+        Media Penyimpanan & SanDisk Ultra SDHC Card 32GB 120MB/s Class 10 UHS-I \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Perancangan desain perangkat keras dalam penelitian ini dilakukan melalui pendekatan iteratif untuk memastikan reliabilitas pengambilan data di lapangan. Pada fase perancangan awal, sistem direncanakan menggunakan arsitektur konektivitas seluler berbasis modul SIM7070G (NB-IoT/LTE-M) dan sistem GNSS \f{Positioning} untuk pengiriman telemetri secara \f{real-time}. Modul SIM7070G membutuhkan daya bersih pada voltase yang besar, yaitu pada besaran 9$\sim$12V melalui arus DC.
+
+Karenanya untuk mendukung operasional mandiri (\f{standalone}) berdasarkan kebutuhan voltase tertinggi, sistem ditenagai oleh baterai DC 12V 10A (12.000 mAh). Tegangan dari baterai tersebut kemudian didistribusikan ke tiga jalur, melalui jalur 12V langsung untuk sistem kipas, melalui jalur 12V langsung untuk mikrokontroler melalui \f{channel} DC untuk menghidupi mikrokontroler beserta \f{shield} modul SIM7070G, dan melalui jalur 12V ke regulator Step-down LM2596 (\f{Buck Converter}) untuk menyuplai daya stabil ke IO Shield menggunakan kabel dengan spesifikasi AWG20 sebagai \f{interface} utama yang mengintegrasikan seluruh sensor.
+
+Namun, berdasarkan pengujian kelayakan teknis (\f{technical feasibility study}) secara internal pada tahap pra-penelitian, diidentifikasi adanya kendala kompatibilitas komunikasi serial (\f{UART instability}) yang persisten. Ditambah dengan keterbatasan waktu pengembangan pada iterasi penelitian ini, implementasi penuh modul SIM7070G diputuskan untuk tidak dilanjutkan.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/diagram_skematik_iot.png}
+    \caption{Diagram Skematik Perangkat IoT}
+    \label{fig:skematikIoT}
+\end{figure}
+
+Oleh karena itu, metodologi perancangan disesuaikan menuju desain akhir (\f{final design}) yang memprioritaskan integritas data (\f{data integrity}) di atas konektivitas \f{real-time}. Arsitektur dialihkan menggunakan mekanisme \f{data logging} lokal pada SD Card.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/pics/realisasi_fisik_iot.png}
+    \caption{Realisasi Fisik Perangkat Keras Sistem IoT}
+    \label{fig:realisasiFisik}
+\end{figure}
+
+Realisasi fisik perangkat IoT dirancang dengan memisahkan komponen elektronik yang sensitif dari jalur aliran gas panas. Seperti yang diilustrasikan pada Gambar \ref{fig:realisasiFisik}, perangkat keras terdiri dari dua modul utama yang saling terhubung: Unit Kontrol Utama (\f{Main Control Unit}) dan Ruang Pencampur (\f{Mixing Chamber}).
+
+Unit Kontrol Utama (sisi kiri pada Gambar \ref{fig:realisasiFisik}) berfungsi sebagai pusat manajemen daya dan pemrosesan data. Komponen-komponen ditempatkan di dalam \f{enclosure} terpisah untuk melindungi baterai dan mikrokontroler dari paparan panas langsung gas buang. Mikrokontroler yang digunakan dilengkapi dengan \f{shield} ekspansi untuk memudahkan konektivitas kabel menuju sensor yang ditempatkan di modul sebelah.
+
+Sedangkan \f{Mixing Chamber} yang berada di sebelah kanan dari keseluruhan sistem IoT pada Gambar \ref{fig:realisasiFisik} di atas merupakan inti dari mekanisme validasi emisi dengan desain mekanikal dirancang menyerupai terowongan angin vertikal untuk menerapkan metode \f{Constant Volume Sampling}. Mekanisme aliran udara berfungsi dengan cara mengalirkan udara dari bawah ke atas dengan menggunakan kipas yang dihubungkan langsung ke baterai bertegangan 12V stabil dan di antara kedua kipasnya terdapat sensor-sensor sebagaimana yang sudah dijelaskan sebelumnya.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/alokasi_pin_mikro.png}
+    \caption{Visualisasi Alokasi Pin pada Mikrokontroler}
+    \label{fig:alokasiPin}
+\end{figure}
+
+Pada konsepnya, seluruh sensor dan modul dihubungkan ke mikrokontroler menggunakan rancangan sebagai berikut.
+\begin{itemize}
+    \item Sensor \ce{CO2} (UART), dihubungkan menggunakan komunikasi \f{SoftwareSerial} pada pin digital D0 untuk RX dan D1 untuk TX.
+    \item Sensor CO (MQ-7), dihubungkan ke pin analog A1.
+    \item Sensor HC (MQ-2), dihubungkan ke pin analog A0.
+    \item Modul \f{Real-Time Clock} (RTC DS1307), dihubungkan melalui \f{interface} I2C dengan memanfaatkan koneksi pada pin SDA/SCL.
+    \item Modul SD Card (XD-204), dihubungkan melalui protokol SPI dengan pin \f{Chip Select} (CS) pada pin digital D10.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{Desain Mekanikal dan Sistem Aliran Udara}
+\label{sec:desainMekanikal}
+%-----------------------------------------------------------------------------%
+Implementasi desain pada sistem IoT penelitian ini memanfaatkan subsistem berupa modul sensor untuk gas \ce{CO2}, CO, dan HC yang diletakkan di dalam sebuah wadah pelindung (\f{enclosure}) terpisah dari komponen mikrokontroler dan kelistrikan utama yang di setiap ujung polarnya masing-masing dimodifikasi sehingga terdapat sebuah kipas dengan konfigurasi \f{in-out} di mana satu kipas menarik udara masuk ke dalam \f{enclosure} dan kipas lainnya mendorong udara ke luar \f{enclosure} untuk menciptakan aliran udara positif di dalam \f{enclosure}. Hal tersebut memungkinkan akibat dari modifikasi fisik pada \f{enclosure} plastik yang digunakan dengan cara melubangi setiap ujung dari kedua sisinya menggunakan \f{drill} dan mengikat kipas pada bagian yang sudah dilubangi.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/modifikasi_enclosure.png}
+    \caption{Proses Modifikasi \f{enclosure} plastik pada \f{Mixing Chamber}}
+    \label{fig:modifikasiEnclosure}
+\end{figure}
+
+Kipas yang digunakan ditenagai secara langsung oleh sumber daya untuk memastikan kecepatan rotasi (rpm) yang tinggi dan stabil tanpa adanya intervensi modulasi lebar pulsa (PWM) sesuai dengan prinsip \f{Fan Affinity Laws} yang dijelaskan pada bab sebelumnya di mana kipas yang beroperasi pada tegangan yang konstan akan menghasilkan RPM yang konstan pula sehingga laju aliran volumetrik udara yang dihasilkan juga konstan sehingga data konsentrasi yang dibaca oleh sensor dapat dengan mudah dikonversi menjadi laju massa emisi pada tahap pemrosesan data. Terakhir, \f{Mixing Chamber} direkatkan dengan unit kontrol utama menggunakan \f{silicone double-sided tape} agar mempermudah proses perubahan posisi dari \f{Mixing Chamber} jika diperlukan dalam proses penelitian dalam rangka mencari posisi dan sudut sehingga dapat mengambil sampel udara secara optimal dari saluran pembuangan utama kendaraan.
+
+%-----------------------------------------------------------------------------%
+\subsection{Pengukuran dan Kalibrasi Laju Aliran Udara (\f{Airflow Rate})}
+\label{sec:kalibrasiAirflow}
+%-----------------------------------------------------------------------------%
+Sebagaimana yang dijelaskan pada bab sebelumnya mengenai Prinsip Laju Aliran Volumetrik Udara, penelitian kali ini mengadopsi panduan dari Canada Mortgage and Housing Corporation sebagai pendekatan praktis dan terstandarisasi untuk mengestimasi aliran udara tanpa memerlukan \f{hood capture} atau anemometer industri yang mahal. Prinsip dasarnya adalah menghitung waktu yang dibutuhkan oleh aliran udara dari \f{blower} untuk mengisi sebuah kantong plastik bervolume standar hingga mengembang sepenuhnya. Prosedur kalibrasi dilakukan dengan langkah-langkah berikut:
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/pics/kalibrasi_airflow.png}
+    \caption{Proses Kalibrasi Laju Aliran Udara ($Q_{air}$)}
+    \label{fig:kalibrasiQair}
+\end{figure}
+
+\begin{enumerate}
+    \item Persiapan Instrumen \\
+    Sebuah kantong plastik polietilen berukuran standar (dimensi 79 x 119 cm berkapasitas 24 liter) disiapkan. Bagian mulut kantong plastik diikat dan direkatkan ke lubang \f{exhaust} pada subsistem \f{Mixing Chamber} dengan menggunakan \f{zip tie}.
+    \item Posisi Awal \\
+    Kantong dikempiskan sepenuhnya hingga rata untuk memastikan volume awal nol.
+    \item Pengambilan Sampel \\
+    Mulut kantong ditempatkan secara kedap pada \f{outlet} (keluaran) \f{blower} sistem IoT.
+    \item Pencatatan Waktu \\
+    Waktu (t) yang dibutuhkan kantong untuk mengembang sepenuhnya dicatat menggunakan \f{stopwatch}. Pengukuran dilakukan sebanyak tiga kali pengulangan (n=3) untuk mendapatkan rata-rata waktu yang konsisten.
+\end{enumerate}
+
+Nilai laju aliran ($Q_{air}$) kemudian ditentukan dengan mengkonversi waktu pengisian berdasarkan tabel standar CMHC. Dari eksperimen yang dilakukan, didapati hasil bahwa sistem \f{blower} memerlukan waktu eksak 4 menit untuk mengisi kantong plastik ber-volume 24 liter. Artinya, sistem \f{blower} dapat mengisi 6 liter volume kantong plastik per menit. Kemudian, dapat disimpulkan bahwa laju aliran udara dari sistem \f{blower} yang ada pada IoT yang dikembangkan sebesar 0,1 L/s secara konstan.
+
+%-----------------------------------------------------------------------------%
+\subsection{Logika Perangkat Lunak dan Akuisisi Data}
+\label{sec:logikaSoftware}
+%-----------------------------------------------------------------------------%
+Perangkat lunak (\f{Firmware}) dikembangkan menggunakan bahasa C++ pada lingkungan Arduino IDE. Logika utama program dirancang untuk melakukan pengambilan data (\f{data acquisition}) secara periodik dengan frekuensi 1 Hz (satu data per detik) dengan memanfaatkan modul RTC.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.4\textwidth]{assets/pics/flowchart_firmware.png}
+    \caption{Diagram Alur Logika \f{Firmware} Akuisisi Data}
+    \label{fig:flowchartFirmware}
+\end{figure}
+
+Alur kerja program adalah sebagai berikut:
+\begin{enumerate}
+    \item Inisialisasi \\
+    Pada saat \f{booting}, sistem menginisialisasi komunikasi serial, modul RTC, dan kartu SD. Jika inisialisasi gagal (misalnya kartu SD tidak terdeteksi), sistem akan memberikan indikasi kesalahan melalui serial monitor pada \f{baud rate} 9600 dengan memenfaatkan \f{interface Hardware Serial}.
+    
+    \item Mekanisme Pemanasan Awal (\f{Pre-heat}) \\
+    Tahapan ini diperlukan untuk menstabilkan elemen pemanas pada sensor MQ-2 dan MQ-7. Berbeda dengan pendekatan konvensional yang menunda sistem hingga suhu optimal tercapai, penelitian ini menerapkan metode \f{non-blocking}. Berdasarkan pengujian stabilitas, ditemukan bahwa deviasi data pada saat awal penyalaan masih berada dalam batas toleransi yang dapat diterima. Dengan demikian, proses \f{pre-heat} didefinisikan sebagai bagian dari siklus operasional aktif, di mana sensor langsung melakukan pembacaan data tanpa periode tunggu (\f{idle time}).
+    
+    \item Siklus Pembacaan (\f{Loop}) \\
+    Sistem memantau waktu secara terus-menerus menggunakan RTC. Setiap kali nilai detik berubah (mendeteksi transisi detik baru), sistem memicu fungsi pembacaan sensor:
+    \begin{itemize}
+        \item Mekanisme Pembacaan Sensor MQ \\
+        Algoritma konversi data menggunakan \f{library} MQUnifiedsensor yang menerapkan persamaan regresi logaritmik untuk menerjemahkan tegangan analog menjadi satuan PPM. Parameter kalibrasi vital, yaitu R0, ditetapkan melalui pengambilan sampel resistansi di lingkungan udara bersih (\f{clean air}) dengan durasi paparan selama 12 jam guna meminimalisir deviasi pembacaan dasar.
+        \item Pembacaan \ce{CO2} \\
+        Mengirimkan perintah heksadesimal (0xFF, 0x01, 0x86...) ke sensor NDIR melalui UART untuk meminta data konsentrasi gas. Sistem menunggu balasan 9 byte data, memverifikasi \f{checksum}, dan menghitung nilai konsentrasi \ce{CO2} dari \f{byte high} dan \f{low}.
+    \end{itemize}
+    
+    \item Penyimpanan Data (\f{Logging}) \\
+    Data hasil pembacaan (\f{Timestamp}, \ce{CO2}, CO, HC) disusun dalam format \f{string Comma-Separated Values} (CSV) dan ditulis ke dalam berkas \code{datalog.csv} pada kartu SD.
+    
+    \item Jika kondisi perubahan detik tidak terpenuhi, sistem memasuki mode tunggu singkat selama 100ms sebelum kembali memeriksa waktu RTC guna menjaga responsivitas sistem terhadap perubahan waktu.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsection{Konversi Sinyal Analog ke Konsentrasi Gas}
+\label{sec:konversiSinyal}
+%-----------------------------------------------------------------------------%
+Salah satu tantangan dalam penggunaan sensor elektrokimia murah (seri MQ) adalah konversi sinyal tegangan menjadi satuan PPM yang akurat. Penelitian ini menggunakan pendekatan regresi pangkat (\f{power law regression}) yang diadopsi dari \f{library} MQUnifiedsensor. Persamaan karakteristik sensor dinyatakan sebagai:
+
+\begin{align}
+    \label{equ:ppm_calc}
+    PPM = A \times (\frac{R_S}{R_0})^B
+\end{align}
+
+Dimana:
+\begin{itemize}
+    \item $R_S$: Resistansi sensor saat terpapar gas (dihitung dari tegangan \f{output} analog ADC 10-bit).
+    \item $R_0$: Resistansi sensor pada udara bersih (konstanta kalibrasi).
+    \item A dan B: Konstanta spesifik kurva sensitivitas gas target (diambil dari \f{datasheet}).
+    \item Untuk Sensor MQ-2 (deteksi HC/LPG): A = 574,25, B = -2,22.
+    \item Untuk Sensor MQ-7 (deteksi CO): A = 99,042, B = -1,518.
+\end{itemize}
+
+Setelah proses kalibrasi dilakukan, diputuskan bahwa nilai $R_0$ untuk sensor MQ-2 adalah 1,13 dan $R_0$ untuk MQ-7 adalah 1,60. Pendekatan ini memungkinkan mikrokontroler untuk mengonversi data mentah ADC secara \f{real-time} menjadi estimasi konsentrasi gas yang dapat dibaca manusia sebelum disimpan.
+
+%-----------------------------------------------------------------------------%
+\section{Metodologi Markov Chain untuk Pembangkitan \f{Drive Cycle}}
+\label{sec:metodologiMarkov}
+%-----------------------------------------------------------------------------%
+Pengembangan model estimasi emisi terdiri dari dua komponen utama: pembentukan siklus berkendara (\f{drive cycle generation}) menggunakan Markov Chain, dan perhitungan emisi menggunakan model MOVESTAR. Penelitian ini mengadopsi kerangka kerja \f{data-driven} yang diusulkan oleh Keskin et al. (2023) untuk membangkitkan profil kecepatan sintetis.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/visualisasi_grid_state_space.png}
+    \caption{Visualisasi \f{Grid State Space Markov Chain Model}}
+    \label{fig:gridStateSpace}
+\end{figure}
+
+\begin{enumerate}
+    \item Diskretisasi Ruang Keadaan (\f{State Space}): \\
+    Perilaku berkendara dimodelkan dalam ruang keadaan dua dimensi yang terdiri dari kecepatan ($v$) dan akselerasi ($a$). Ruang ini dibagi menjadi kisi-kisi (\f{grid}) dengan resolusi kecepatan ($v_{res}$) sebesar 2.5 km/jam dan resolusi akselerasi ($a_{res}$) sebesar 0.25 m/s$^2$. Setiap sel dalam \f{grid} ini merepresentasikan satu \f{state} unik.
+    
+    \item Matriks Probabilitas Transisi: \\
+    Berdasarkan data latih, dihitung matriks transisi $P$ di mana setiap elemen $p_{ij}$ merepresentasikan probabilitas kendaraan berpindah dari \f{state} $i$ ke \f{state} $j$ dalam satu langkah waktu. Sifat \f{memoryless} Markov Chain digunakan, artinya kondisi masa depan hanya bergantung pada kondisi saat ini.
+    
+    \item Generasi Siklus: \\
+    Dengan menggunakan simulasi Monte Carlo pada matriks transisi yang terbentuk, model dapat membangkitkan urutan kecepatan dan akselerasi baru yang secara statistik menyerupai karakteristik data asli, namun disesuaikan dengan topologi rute yang baru.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Metodologi \f{Machine Learning} untuk Pembangkitan \f{Drive Cycle}}
+\label{sec:metodologiML}
+%-----------------------------------------------------------------------------%
+Pada penelitian ini, pendekatan \f{machine learning} (ML) digunakan sebagai metode pembanding (\f{comparative approach}) terhadap model berbasis Markov Chain dalam pembangkitan \f{driving cycle}. Adanya pendekatan ML pembanding bertujuan untuk mengevaluasi kemampuan model non-linear berbasis data dalam mereplikasi perilaku berkendara secara mikroskopik, khususnya profil kecepatan dan akselerasi kendaraan pada resolusi waktu per detik. Berbeda dengan pendekatan Markov yang mengandalkan probabilitas transisi antar-keadaan diskret, model ML mempelajari hubungan kontinu dan kompleks antara dinamika kendaraan, karakteristik jalan, serta indikasi kondisi lalu lintas yang teramati secara implisit.
+
+%-----------------------------------------------------------------------------%
+\subsection{Tujuan dan Peran Model \f{Machine Learning}}
+\label{sec:tujuanML}
+%-----------------------------------------------------------------------------%
+Tujuan penggunaan ML bukan untuk menggantikan model stokastik sepenuhnya, melainkan untuk mengevaluasi sejauh mana pendekatan pembelajaran berbasis data mampu merepresentasikan dinamika berkendara secara lebih fleksibel dan non-linear. Secara khusus, model ML dirancang untuk:
+
+\begin{enumerate}
+    \item Memprediksi profil kecepatan dan akselerasi kendaraan pada resolusi waktu per detik, sehingga perilaku berkendara dapat dimodelkan secara mikroskopik dan berkelanjutan.
+    \item Menghasilkan \f{input} dinamis bagi model emisi berbasis fisika (MOVESTAR), di mana hasil prediksi kecepatan dan akselerasi digunakan untuk menghitung variabel turunan seperti \f{Vehicle Specific Power} (VSP) hingga estimasi emisi gas buang.
+    \item Menjadi dasar evaluasi performa pendekatan pembangkitan \f{driving cycle}, dengan membandingkan karakteristik hasil prediksi ML terhadap data perjalanan nyata serta terhadap model Markov Chain.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsection{Alur Umum untuk Model \f{Machine Learning}}
+\label{sec:alurML}
+%-----------------------------------------------------------------------------%
+Subbab ini menjelaskan alur implementasi model \f{machine learning} yang digunakan dalam penelitian ini, mulai dari tahap persiapan data, pelatihan model, hingga proses inferensi untuk pembangkitan \f{driving cycle}. Model \f{machine learning} diimplementasikan dalam skema autoregresif, di mana prediksi kecepatan dan akselerasi pada suatu waktu digunakan kembali sebagai bagian dari \f{input} untuk langkah waktu berikutnya. Pendekatan ini memungkinkan pembangkitan profil kecepatan yang berkesinambungan secara temporal, sehingga menyerupai perilaku berkendara nyata pada tingkat mikroskopik.
+
+Selain itu, subbab ini juga menjelaskan perbedaan perlakuan data antara tahap pelatihan dan tahap penerapan (\f{deployment}). Pada tahap pelatihan, fitur diekstraksi dari data historis perjalanan kendaraan, sementara pada tahap inferensi fitur dihitung secara dinamis berdasarkan hasil prediksi model dan informasi keadaan jalan berdasarkan API dari Google Maps.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Tahap Pelatihan (\f{Training}) dan Validasi}
+\label{sec:tahapTraining}
+%-----------------------------------------------------------------------------%
+Pada tahap pelatihan, model \f{machine learning} dilatih menggunakan \f{dataset} historis perjalanan kendaraan yang telah melalui proses pembersihan dan ekstraksi fitur. \f{Dataset} ini disusun dalam format \f{supervised learning}, di mana fitur \f{input} merepresentasikan kondisi kendaraan dan konteks jalan pada waktu tertentu, sedangkan target keluaran berupa kecepatan atau akselerasi pada langkah waktu berikutnya.
+
+Proses pelatihan diikuti dengan tahap validasi untuk mengevaluasi kemampuan generalisasi model terhadap data yang tidak digunakan selama pelatihan. Evaluasi dilakukan menggunakan metrik kesalahan regresi untuk memastikan bahwa model tidak hanya mampu menyesuaikan diri dengan data pelatihan, tetapi juga stabil terhadap variasi kondisi berkendara.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/alur_data_training.png}
+    \caption{Alur Data dari Tahap Pelatihan (\f{Training})}
+    \label{fig:alurDataTraining}
+\end{figure}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Tahap Inferensi Autoregresif (\f{Autoregressive Inference})}
+\label{sec:tahapInferensi}
+%-----------------------------------------------------------------------------%
+Berbeda dengan tahap pelatihan, pada tahap penerapan (\f{deployment}), model ML dioperasikan dalam skema autoregresif. Pada skema ini, prediksi kecepatan dan akselerasi pada waktu ke $t$ digunakan kembali sebagai bagian dari \f{input} untuk memprediksi kondisi pada waktu ke $t+1$. Pendekatan ini dipilih karena pembangkitan \f{driving cycle} bersifat sekuensial dan berkelanjutan, di mana kondisi kendaraan pada suatu waktu sangat dipengaruhi oleh keadaan sebelumnya. Dengan menggunakan mekanisme autoregresif, model mampu mensintesis rangkaian profil kecepatan dan akselerasi yang konsisten secara temporal, menyerupai perilaku berkendara nyata.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/alur_data_inference.png}
+    \caption{Alur Data dari Tahap \f{Inference}}
+    \label{fig:alurDataInference}
+\end{figure}
+
+Perbedaan fundamental antara fase pelatihan dan fase inferensi terletak pada integritas sumber data \f{input}. Pada Gambar \ref{fig:alurDataTraining} (Fase Pelatihan), model mempelajari pola menggunakan data observasi aktual ($v_{actual, t-1}$) sebagai prediktor. Sebaliknya, pada Gambar \ref{fig:alurDataInference} (Fase Inferensi), prediktor dibentuk secara rekursif dari hasil prediksi model pada detik sebelumnya ($v_{pred, t-1}$). Transisi dari \f{input} aktual ke \f{input} sintetik ini merupakan kunci utama dalam pembangkitan \f{drive cycle} untuk rute baru yang belum memiliki data observasi.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Generalisasi Model pada Rute Baru}
+\label{sec:generalisasiModel}
+%-----------------------------------------------------------------------------%
+Dalam penelitian ini, daftar fitur yang digunakan pada tahap pelatihan dan inferensi dibuat identik untuk menjaga homogenitas ruang fitur. Konsistensi ini merupakan prasyarat penting dalam penerapan model \f{machine learning}, karena model hanya dapat memberikan prediksi yang valid apabila struktur dan semantik fitur \f{input} saat inferensi sesuai dengan kondisi yang dipelajari selama proses pelatihan.
+
+Perbedaan antara kedua tahap tersebut terletak pada sumber nilai fitur. Pada tahap pelatihan, fitur dihitung dari data historis perjalanan kendaraan. Sementara itu, pada tahap inferensi, fitur yang sama dihitung secara dinamis menggunakan hasil prediksi model pada langkah waktu sebelumnya serta informasi kondisi jalan secara \f{real-time}. Kemampuan model untuk diterapkan pada rute atau wilayah baru (\f{unseen data}) tidak bergantung pada identitas jalan secara eksplisit, melainkan pada kesamaan karakteristik fitur yang merepresentasikan dinamika kendaraan, konteks spasial, dan kondisi lalu lintas implisit.
+
+Karena model diterapkan pada rute baru yang belum memiliki data kecepatan aktual, fitur kondisi jalan bersifat sintetik dan autoregresif. Karakteristik jalan "disintesis" melalui integrasi informasi statis (seperti \f{speed limit} dan geometri rute dari GIS) dengan \f{output} model secara berkelanjutan. Sebagai contoh, fitur \f{traffic\_shock} atau \f{stop\_density} pada tahap ini tidak dibaca dari sensor fisik, melainkan dihasilkan secara organik oleh model berdasarkan pola hambatan yang terdeteksi dari prediksi kecepatan sebelumnya.
+
+Alasan teknis di balik perbedaan sumber data ini adalah untuk menjamin kemampuan model dalam melakukan generalisasi tanpa ketergantungan data luar. Model tidak lagi bergantung pada identitas jalan secara eksplisit, melainkan pada kesamaan karakteristik fitur. Selama fitur-fitur yang relevan dapat dihitung, seperti tren kecepatan, kepadatan berhenti, dan batas kecepatan jalan, model dapat menggeneralisasi pola berkendara pada segmen jalan baru.
+
+Selain itu, independensi (ketidakbergantungan) model terhadap informasi kondisi lalu lintas dinamis (\f{real-time traffic state}) dari API pihak ketiga menjadi keunggulan krusial dalam desain sistem ini. Desain sistem ini menitikberatkan pada meminimalisir penggunaan sumber daya (\f{resource}) pada tahap pelatihan dengan meniadakan dependensi terhadap data lalu lintas \f{real-time} eksternal. Meskipun konektivitas API tetap dimanfaatkan pada tahap inferensi untuk memperoleh informasi topologi rute statis, model tetap mandiri dalam mensintesis dinamika kecepatan secara internal. Hal ini krusial untuk menjaga efisiensi proses pelatihan seiring dengan bertambahnya volume \f{dataset} di masa depan.
+
+Dengan mengandalkan fitur autoregresif, model mampu menangkap dinamika kemacetan secara implisit sembari tetap menjamin profil kecepatan beresolusi tinggi (1 Hz). Pendekatan ini memastikan akurasi estimasi emisi mikroskopik tetap terjaga tanpa mengorbankan skalabilitas sistem, sehingga profil \f{drive cycle} yang dihasilkan tetap realistis secara fisik bahkan saat disimulasikan pada wilayah dengan keterbatasan data infrastruktur digital.
+
+%-----------------------------------------------------------------------------%
+\subsection{Langkah Pemrosesan Data untuk \f{Machine Learning} Pembanding}
+\label{sec:processingDataML}
+%-----------------------------------------------------------------------------%
+Tahap \f{processing} ini menjelaskan proses transformasi data mentah hasil perekaman sensor kendaraan menjadi \f{dataset supervised learning} yang siap digunakan oleh model \f{machine learning}. Fokus utama tahapan ini adalah meningkatkan kualitas data, menghilangkan bias akibat kondisi diam, serta mengekstraksi fitur-fitur yang mampu merepresentasikan dinamika berkendara, konteks jalan, dan pengaruh lalu lintas secara implisit.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Pembersihan dan Perbaikan Data (\f{Data Cleaning})}
+\label{sec:dataCleaning}
+%-----------------------------------------------------------------------------%
+Sebelum dilakukan ekstraksi fitur, data mentah terlebih dahulu melalui tahap pembersihan untuk menjamin integritas dan konsistensi \f{input} model. Tahapan ini meliputi:
+
+\begin{enumerate}
+    \item Verifikasi dan Rekonstruksi Kecepatan \\
+    Apabila sensor kecepatan menunjukkan nilai rata-rata mendekati nol (indikasi kegagalan sensor), namun masih terdeteksi adanya perubahan koordinat GPS, maka nilai kecepatan dihitung ulang (\f{recalculated}). Perhitungan dilakukan menggunakan jarak Euclidean antar koordinat geografis yang dibagi dengan selang waktu pengambilan data ($\Delta t$):
+    \begin{equation}
+        v = \frac{\sqrt{(\Delta lat)^2+(\Delta lon)^2}}{\Delta t}
+    \end{equation}
+    
+    \item Penghapusan Data Diam (\f{Stationary Filtering}) \\
+    Untuk menghindari bias model terhadap kondisi berhenti total, seluruh observasi dengan kecepatan di bawah ambang batas tertentu ($v < 0.5$ m/s) dihapus dari \f{training set}. Pendekatan ini memaksa model untuk mempelajari dinamika pergerakan kendaraan (\f{motion dynamics}) dengan lebih baik tanpa kondisi diam yang tidak relevan dalam pembangkitan \f{driving cycle}.
+    
+    \item Penanganan \f{Missing Values} \\
+    Nilai yang hilang pada fitur temporal ditangani menggunakan metode \f{linear interpolation}. Pendekatan ini memperkirakan nilai yang hilang berdasarkan hubungan linier antara observasi sebelum dan sesudahnya dalam urutan waktu, sehingga menjaga kesinambungan temporal data.
+    Sebagai ilustrasi, apabila kecepatan kendaraan tercatat sebesar 4 m/s pada detik ke-1 dan 6 m/s pada detik ke-3, sementara nilai pada detik ke-2 tidak tersedia, maka nilai pada detik ke-2 diestimasi sebesar 5 m/s. Dengan demikian, perubahan kecepatan antar waktu tetap bersifat halus dan konsisten secara fisik.
+    
+    Sementara itu, nilai yang hilang pada fitur numerik statis, seperti batas kecepatan jalan atau karakteristik geometris segmen, diisi menggunakan nilai nol atau nilai konstan yang sesuai. Pendekatan ini dipilih untuk menghindari gangguan terhadap dinamika temporal serta mencegah distorsi statistik yang signifikan pada distribusi fitur \f{input} model.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Fitur Kinematik dan Lag (\f{Lag Features})}
+\label{sec:lagFeatures}
+%-----------------------------------------------------------------------------%
+Untuk memodelkan sifat inersia kendaraan, yaitu ketergantungan kondisi saat ini terhadap kondisi sebelumnya, diterapkan konsep \f{autoregressive features}. Fitur-fitur ini membantu model dalam menangkap pola transisi kecepatan, seperti akselerasi bertahap, perlambatan, dan \f{stop-and-go behavior}, yang tidak dapat direpresentasikan hanya oleh observasi tunggal pada satu waktu.
+
+\begin{itemize}
+    \item Kecepatan sebelumnya (\f{lag speed}):
+    \begin{itemize}
+        \item $v_{t-1}$ (\code{speed\_prev1}): Kecepatan pada satu detik sebelum.
+        \item $v_{t-2}$ (\code{speed\_prev2}): Kecepatan pada dua detik sebelum.
+    \end{itemize}
+    \item Akselerasi turunan (\f{derived acceleration}) \\
+    Akselerasi tidak diambil mentah dari sensor akselerometer karena tingginya \f{noise}. Akselerasi $a_{t-1}$, dihitung sebagai turunan pertama dari kecepatan historis:
+    \begin{equation}
+        a_{t-1} = \frac{v_{t-1} - v_{t-2}}{\Delta t}
+    \end{equation}
+    Di mana $\Delta t$ adalah selang waktu antar observasi (1 detik). Penggunaan nilai $\Delta t$ yang eksplisit memastikan bahwa model memiliki dimensi fisik yang valid sebelum diinputkan ke dalam perhitungan emisi.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Fitur Momentum dan Tren (\f{Rolling Features})}
+\label{sec:rollingFeatures}
+%-----------------------------------------------------------------------------%
+Untuk menghindari prediksi yang terlalu kaku (\f{flatline prediction}) dan meningkatkan sensitivitas model terhadap perubahan jangka pendek, digunakan fitur statistik berbasis \f{sliding window} dengan durasi 5 detik. Fitur \f{rolling} ini memungkinkan model membedakan antara kondisi berkendara stabil (misalnya \f{cruising}) dan kondisi tidak stabil (misalnya \f{stop-and-go traffic}) untuk menangkap momentum dan tren pergerakan kendaraan secara lokal. Fitur yang digunakan antara lain:
+
+\begin{itemize}
+    \item Rata-rata kecepatan bergerak (\f{rolling mean speed}) \\
+    Rata-rata kecepatan dalam jendela waktu 5 detik terakhir (t-5 hingga t-1). Fitur ini memberikan konteks "momentum" kendaraan kepada model dan merepresentasikan tren kecepatan jangka pendek dan kondisi umum pergerakan kendaraan.
+    \item Deviasi standar kecepatan (\f{rolling standard deviation}) \\
+    Fitur ini merupakan variansi kecepatan dalam 5 detik terakhir. Fitur ini dapat membantu model mendeteksi apakah kendaraan sedang bergerak stabil (konstan) atau agresif (fluktuatif). Fitur ini juga dapat menggambarkan tingkat ketidakstabilan kecepatan yang sering muncul pada kondisi lalu lintas padat.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Fitur Representasi untuk Kondisi Lalu Lintas}
+\label{sec:implicitTraffic}
+%-----------------------------------------------------------------------------%
+Berbeda dengan pendekatan berbasis data lalu lintas \f{real-time}, penelitian ini tidak menggunakan informasi eksplisit seperti volume kendaraan, tingkat kemacetan, atau indeks lalu lintas dari API eksternal. Sebagai gantinya, kondisi lalu lintas direpresentasikan secara implisit melalui fitur-fitur turunan perilaku kendaraan yang diekstraksi dari data historis perjalanan. Fitur-fitur tersebut meliputi:
+
+\begin{itemize}
+    \item \f{Traffic shock}, yang mengindikasikan perubahan kecepatan mendadak akibat gangguan lalu lintas, seperti kendaraan di depan berhenti tiba-tiba atau adanya persimpangan.
+    \item \f{Stop density}, yang merepresentasikan frekuensi kejadian berhenti dalam jendela waktu tertentu (misalnya 20 detik), sebagai indikator kepadatan lalu lintas lokal.
+    \item \f{Speed ratio}, yaitu rasio antara kecepatan aktual kendaraan terhadap batas kecepatan jalan, yang mencerminkan tingkat kebebasan pergerakan pada suatu segmen jalan.
+\end{itemize}
+
+Pendekatan ini memungkinkan model untuk mempelajari pengaruh lalu lintas secara tidak langsung (\f{latent traffic effect}) melalui respons dinamis kendaraan, tanpa ketergantungan pada ketersediaan data eksternal yang bersifat \f{real-time}.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Fitur Konteks Jalan (\f{Static Road Context})}
+\label{sec:staticRoadContext}
+%-----------------------------------------------------------------------------%
+Data diperkaya dengan informasi geometri perjalanan untuk merepresentasikan karakteristik jalan. Fitur-fitur ini berperan penting dalam membantu model melakukan generalisasi antar-segmen jalan dengan karakteristik serupa, serta mengaitkan perilaku berkendara dengan konteks infrastruktur jalan. Fitur-fitur ini meliputi:
+
+\begin{itemize}
+    \item Perubahan Jarak ($\Delta d$) \\
+    Dihitung menggunakan pendekatan Euclidean berdasarkan perubahan \f{latitude} ($\Delta \phi$) dan \f{longitude} ($\Delta \lambda$).
+    \begin{equation}
+        \Delta d = \sqrt{(\Delta lat)^2 + (\Delta lon)^2}
+    \end{equation}
+    \item \f{Elevation Gain} ($h_{gain}$) \\
+    Perubahan ketinggian positif antar titik waktu untuk mendeteksi kondisi menanjak yang mempengaruhi beban mesin.
+    \item \f{Heading Change} \& \f{Turn Count} \\
+    Perubahan sudut arah kendaraan (\f{bearing}). Jika perubahan sudut absolut melebihi 15 derajat, variabel \f{Turn Count} bernilai 1 (indikasi berbelok), selain itu 0.
+    \item Batas kecepatan jalan (\f{speed limit}) yang mencerminkan regulasi dan fungsi jalan.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Pembentukan \f{Dataset Final}}
+\label{sec:datasetFinal}
+%-----------------------------------------------------------------------------%
+Setelah seluruh fitur dihitung, struktur data akhir untuk setiap detik $t$ terdiri dari vektor \f{input} $X$ dan target $Y$:
+
+\begin{itemize}
+    \item Vektor Input ($X_t$):
+    \begin{equation}
+        X_t = [v_{t-1}, v_{t-2}, a_{t-1}, v_{roll\_mean}, v_{roll\_std}, v_{seg\_avg}, \Delta d, h_{gain}, Traf, Turn]
+    \end{equation}
+    \item Target Input ($Y_t$):
+    \begin{equation}
+        Y_t = v_t \quad \text{(Kecepatan Aktual)}
+    \end{equation}
+\end{itemize}
+
+Seluruh fitur \f{input} dinormalisasi menggunakan teknik \f{StandardScaler} ($Z = \frac{X-\mu}{\sigma}$) agar memiliki distribusi dengan rata-rata 0 dan standar deviasi 1, yang krusial untuk performa model sensitif skala, seperti SVR dan ANN.
+
+%-----------------------------------------------------------------------------%
+\subsection{Variabel \f{Input} Model \f{Machine Learning}}
+\label{sec:variabelInput}
+%-----------------------------------------------------------------------------%
+Pemilihan variabel \f{input} dalam sistem \f{Green Routing} ini didasarkan pada kebutuhan untuk mentransformasi data makroskopik jalan menjadi estimasi emisi mikroskopik yang akurat. Karena emisi sangat sensitif terhadap dinamika kendaraan per detik, variabel yang dipilih mencakup aspek fisik kendaraan, kondisi jalan, dan indikator lalu lintas implisit \citep{de2021microscopic}.
+
+\begin{table}
+    \centering
+    \caption{Ringkasan Variabel \f{Input} Model}
+    \label{tab:variabelInput}
+    \begin{tabular}{|p{0.3\textwidth}|p{0.3\textwidth}|p{0.3\textwidth}|}
+        \hline
+        \bo{Kategori} & \bo{Variabel Input} & \bo{Deskripsi} \\
+        \hline
+        Dinamika Kendaraan & \code{speed\_mps\_prev}, \code{accel\_prev}, \code{speed\_roll\_mean}, \code{speed\_roll\_std} & Menangkap pola kecepatan dan akselerasi sesaat untuk mendeteksi gaya berkendara. \\
+        \hline
+        Lalu Lintas Implisit & \code{traffic\_shock}, \code{stop\_density\_20s}, \code{speed\_ratio}, \code{segment\_avg\_speed} & Mengidentifikasi kondisi kemacetan dan perilaku "stop-and-go" tanpa memerlukan data volume kendaraan riil. \\
+        \hline
+        Geometris \& Jalan & \code{elev\_gain\_m}, \code{heading\_change}, \code{turn\_count}, \code{speed\_limit\_kmh}, \code{delta\_dist} & Mewakili pengaruh topografi (kemiringan), kelengkungan jalan, dan batasan infrastruktur terhadap beban mesin. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+Dalam penelitian ini, keterbatasan akses terhadap \f{Real-time Traffic API} diatasi melalui pendekatan sintesis perilaku berkendara berbasis konteks statis dan autoregresi. Mengacu pada metodologi \cite{de2021microscopic}, karakteristik jalan dari GIS (seperti \f{speed limit} dan geometri) digunakan sebagai kerangka dasar (\f{boundary conditions}). Model ini membangkitkan dinamika lalu lintas secara mandiri (\f{self-generated}) melalui mekanisme umpan balik (\f{feedback loop}). Fitur-fitur seperti \code{speed\_ratio}, \code{stop\_density}, dan \code{traffic\_shock} tidak bersifat statis, melainkan dihitung secara rekursif setiap detiknya selama fase inferensi. Sebagai contoh, jika model memprediksi penurunan kecepatan yang drastis pada detik sebelumnya, maka nilai \code{traffic\_shock} akan meningkat secara otomatis pada \f{input} detik berikutnya. Hal ini akan memicu model untuk memprediksi perilaku berkendara yang lebih fluktuatif (karakteristik kemacetan).
+
+Berbeda dengan data lalu lintas eksplisit yang diperoleh melalui layanan eksternal (API), variabel lalu lintas implisit dalam penelitian ini bersifat \f{self-generated}. Fitur lalu lintas implisit seperti \code{traffic\_shock} dan \code{stop\_density} didefinisikan sebagai fitur turunan (\f{derived features}) yang diekstraksi secara \f{on-the-fly} menggunakan teknik jendela waktu (\f{moving window}) dari deret kecepatan pada langkah waktu sebelumnya. Pendekatan ini memungkinkan model untuk melakukan inferensi kondisi kepadatan jalan secara mandiri berdasarkan anomali pola kecepatan dan frekuensi kendaraan berhenti.
+
+Dengan pendekatan ini, model tidak hanya mengasumsikan pola berkendara berdasarkan kemiripan geometris jalan, tetapi juga mensimulasikan perubahan kecepatan yang konsisten secara fisik. Penggunaan \code{speed\_ratio} (rasio kecepatan prediksi terhadap \f{speed limit}) pada tahap \f{inference} berfungsi sebagai indikator efisiensi aliran jalan tersebut. Rasio yang rendah secara implisit merepresentasikan segmen jalan yang padat atau memiliki banyak hambatan, sehingga memungkinkan pembangkitan \f{drive cycle} yang realistis tanpa \f{input} aliran lalu lintas eksternal secara langsung.
+
+%-----------------------------------------------------------------------------%
+\subsection{Pemilihan Algoritma \f{Machine Learning}}
+\label{sec:pemilihanAlgoritma}
+%-----------------------------------------------------------------------------%
+Implementasi \f{Green Routing} yang berfokus pada emisi mikroskopik memerlukan pemodelan yang sangat presisi karena emisi polutan memiliki sensitivitas yang jauh lebih tinggi terhadap dinamika berkendara dibandingkan dengan konsumsi bahan bakar. Oleh karena itu, penelitian ini beralih dari model statistik tradisional ke pendekatan \f{machine learning} non-linear.
+
+Prediksi lalu lintas dan emisi merupakan masalah spasial-temporal yang kompleks dan non-linear, di mana dinamika kendaraan dalam kondisi macet berbeda secara drastis dengan kondisi lancar. Model linear sering kali gagal menangkap fluktuasi tajam pada profil kecepatan dan akselerasi per detik, padahal detail perilaku berkendara inilah yang menentukan tingkat emisi secara signifikan. Pendekatan \f{machine learning} mampu memetakan hubungan rumit antara variabel lingkungan (seperti topografi dan cuaca) dengan gaya berkendara yang tidak konsisten antar-individu. Pada bagian ini, akan dijelaskan justifikasi pemilihan algoritma untuk tahap \f{modeling}.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Support Vector Regression} (SVR)}
+\label{sec:svr}
+%-----------------------------------------------------------------------------%
+SVR dipilih karena kemampuannya melakukan regresi dalam ruang fitur berdimensi tinggi menggunakan fungsi kernel, yang sangat efektif untuk data \f{time-series} dari riwayat perjalanan GPS. Penelitian \cite{satrinia2017} menemukan bahwa SVR memiliki performa yang stabil dalam memprediksi kecepatan segmen jalan, di mana metode ini mampu memetakan data riwayat perjalanan taksi yang awalnya tidak memiliki informasi kecepatan menjadi prediksi yang akurat. Fitur \f{input} utama yang digunakan dalam riset ini mencakup informasi spasial (\f{longitude} dan \f{latitude}) serta informasi temporal (waktu) yang diekstraksi dari data perjalanan taksi di Bandung. Dalam penelitian ini, SVR diuji untuk menangani fitur-fitur spasial yang telah diproses melalui tahap \f{map-matching}, serupa dengan basis metodologi yang digunakan pada model Markov Chain.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Random Forest} (RF)}
+\label{sec:randomForest}
+%-----------------------------------------------------------------------------%
+\f{Random Forest} digunakan karena karakteristiknya yang tangguh (\f{robust}), mampu menangani \f{dataset} dengan banyak atribut kompleks, serta memiliki \f{generalization error} yang rendah. \cite{liu2017} menunjukkan efektivitas RF dalam mengklasifikasikan kondisi kemacetan. Secara lebih spesifik, \cite{de2021microscopic} memanfaatkan RF untuk mengekstraksi karakteristik berkendara guna mengestimasi dampak lingkungan mikroskopik secara akurat. Penggunaan RF dalam penelitian ini bertujuan untuk menguji sejauh mana \f{ensemble} pohon keputusan dapat menangkap pengaruh variabel teknis rute terhadap profil emisi. Sejalan dengan penelitian De Nunzio, penelitian ini juga mengintegrasikan fitur geometris seperti perubahan sudut arah (\f{bearing}) dan elevasi (\f{altitude}) sebagai variabel krusial untuk menangkap beban mesin yang berkorelasi dengan emisi.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{XGBoost}
+\label{sec:xgboost}
+%-----------------------------------------------------------------------------%
+XGBoost (\f{eXtreme Gradient Boosting}) diimplementasikan karena efisiensinya dalam menangani \f{dataset} besar dan kemampuannya menangkap interaksi non-linear antara variabel temporal dan kondisi cuaca. \cite{rubasinghe2023} mencatat bahwa XGBoost menunjukkan stabilitas yang lebih baik dengan nilai \f{error} (MAE dan RMSE) yang lebih rendah dibandingkan model \f{gradient boosting} lainnya dalam memprediksi kecepatan rata-rata di segmen jalan perkotaan. Meskipun Rubasinghe menggunakan variabel cuaca eksternal yang masif, penelitian ini mengadaptasi kekuatan algoritma XGBoost untuk mempelajari pola \f{residual} dari fitur autoregresif guna meningkatkan akurasi prediksi pada level mikroskopik.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Decision Tree} (DT)}
+\label{sec:decisionTree}
+%-----------------------------------------------------------------------------%
+DT digunakan sebagai model dasar yang mudah diinterpretasikan untuk membagi data berdasarkan aturan keputusan yang jelas. Dalam riset \cite{tamir2020}, algoritma ini terbukti mencapai akurasi hingga 97\% dalam klasifikasi tingkat kemacetan, menjadikannya acuan yang kuat untuk mengidentifikasi ambang batas perilaku berkendara pada segmen jalan tertentu. Fitur \f{input} yang digunakan meliputi arah jalan, tipe jalan, panjang jalan, waktu tempuh, kecepatan mobil, dan tingkat hunian (\f{occupancy}) jalan. Keunggulan DT terletak pada kemampuannya membagi data berdasarkan aturan keputusan yang jelas, sehingga sangat berguna dalam penelitian ini untuk mengidentifikasi ambang batas pergerakan kendaraan (\f{stop-and-go behavior}) berdasarkan panjang segmen dan tipe jalan.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Artificial Neural Networks} (ANN)}
+\label{sec:ann}
+%-----------------------------------------------------------------------------%
+ANN dipilih karena kemampuannya yang unggul dalam memetakan pola \f{input-output} non-linear yang rumit serta relatif kurang sensitif terhadap data sensor yang hilang atau salah (\f{noise}). Penelitian \cite{park2011} membuktikan bahwa model berbasis saraf (seperti NNTM-SP) mampu mendeteksi perubahan dinamika lalu lintas dan memprediksi profil kecepatan masa depan secara presisi hingga rentang waktu 30 menit. Fitur \f{input} yang digunakan adalah kecepatan (v) dan volume aliran (q) dari sensor di lokasi saat ini, serta data dari satu sensor di depan dan beberapa sensor di belakang (berdasarkan interval waktu prediksi).
+
+Perbedaan pemilihan fitur \f{input} dalam penelitian ini dibandingkan dengan referensi di atas didasari oleh fokus pada estimasi emisi mikroskopik 1 Hz yang mandiri terhadap infrastruktur jalan statis (seperti sensor volume kendaraan). Berbeda dengan \cite{rubasinghe2023} yang menggunakan variabel cuaca untuk prediksi makro, penelitian ini menggunakan fitur autoregresif dan \f{rolling statistics} untuk menjaga kontinuitas fisik kendaraan. Pendekatan ini paling mendekati metodologi \cite{de2021microscopic} dalam penggunaan konteks geometri jalan, namun dikembangkan lebih lanjut dengan menyertakan indikator lalu lintas implisit guna menghasilkan profil berkendara yang realistis tanpa ketergantungan pada data lalu lintas eksternal yang bersifat terbatas.
+
+%-----------------------------------------------------------------------------%
+\subsection{Posisi Penelitian, Asumsi, dan Justifikasi Metodologi}
+\label{sec:posisiPenelitianMetodologi}
+%-----------------------------------------------------------------------------%
+Bagian ini menguraikan posisi penelitian terhadap literatur terkini, asumsi yang mendasari pemodelan, serta justifikasi strategis di balik pemilihan variabel \f{input} yang digunakan.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Posisi Penelitian terhadap Literatur Terkini}
+\label{sec:posisiLiteratur}
+%-----------------------------------------------------------------------------%
+Penelitian ini memposisikan diri pada irisan antara estimasi profil kecepatan mikroskopik dan pemodelan emisi berbasis data. Metodologi yang dikembangkan mengadopsi kerangka kerja \cite{de2021microscopic} sebagai acuan utama dalam mentransformasi informasi makroskopik jalan menjadi estimasi emisi mikroskopik. Sebagai pembanding teknis dalam optimasi algoritma, riset ini merujuk pada metodologi \cite{rubasinghe2023} dalam penggunaan algoritma \f{boosting} untuk menangkap variabilitas kecepatan akibat faktor eksternal. Dengan mengintegrasikan kedua pendekatan tersebut, sistem \f{Green Routing} ini dirancang untuk melampaui akurasi model makroskopik konvensional dalam mengestimasi polutan seperti \ce{CO2}.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Asumsi Pemodelan}
+\label{sec:asumsiPemodelan}
+%-----------------------------------------------------------------------------%
+Untuk menjamin validitas hasil pembangkitan \f{drive cycle} dalam keterbatasan data, penelitian ini menetapkan beberapa asumsi dasar sebagai berikut:
+
+\begin{enumerate}
+    \item Homogenitas Karakteristik Berkendara \\
+    Perilaku berkendara pada segmen jalan baru diasumsikan memiliki distribusi stokastik yang serupa dengan data historis pada segmen jalan dengan karakteristik geometris (GIS) dan batasan kecepatan (\f{speed limit}) yang identik.
+    
+    \item Reduksi \f{Noise} Lingkungan \\
+    Faktor eksternal yang tidak terukur secara eksplisit, seperti kondisi cuaca atau kejadian lalu lintas insidental (kecelakaan), dianggap sebagai gangguan (\f{noise}) yang pengaruhnya telah diminimalisir melalui penggunaan fitur tren statistik (\f{rolling average}).
+    
+    \item Konsistensi Dinamika Fisik \\
+    Diasumsikan bahwa setiap perubahan kecepatan yang diprediksi oleh model mematuhi batas inersia kendaraan, sehingga transisi kecepatan antar detik tetap berada dalam rentang akselerasi yang dimungkinkan secara fisik.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsubsection{Justifikasi Metodologis dan Variabel \f{Input}}
+\label{sec:justifikasiMetodologis}
+%-----------------------------------------------------------------------------%
+Terdapat perbedaan fundamental dalam pemilihan fitur dan skala data antara penelitian ini dengan referensi utama, yang didasari oleh dua alasan strategis:
+
+\begin{enumerate}
+    \item Resolusi Temporal 1 Hz vs Agregasi Makro \\
+    Berbeda dengan penelitian \cite{rubasinghe2023} yang menggunakan \f{dataset} skala masif (4 juta data) untuk memprediksi kecepatan rata-rata trafik secara makro, penelitian ini berfokus pada pemodelan emisi mikroskopik yang sangat bergantung pada karakteristik unik satu kendaraan tertentu. Penggunaan \f{dataset} sebesar 29.032 titik data (detik) dianggap representatif karena mencakup profil \f{high-resolution} 1 Hz yang menangkap dinamika akselerasi dan deselerasi secara mendetail. Fokus penelitian ini bukan pada kuantitas cakupan wilayah, melainkan pada kedalaman fitur autoregresif yang memungkinkan model mempelajari pola perilaku berkendara (\f{driving behavior}) secara spesifik, yang seringkali hilang dalam \f{dataset} makroskopik yang telah mengalami agregasi.
+    
+    \item Independensi Infrastruktur Digital dan Lalu Lintas Implisit \\
+    Penelitian terdahulu, seperti yang dilakukan oleh \cite{tamir2020}, sangat mengandalkan data eksplisit dari sensor infrastruktur fisik, seperti volume kendaraan dan tingkat hunian (\f{occupancy}) jalan. Namun, mengingat keterbatasan infrastruktur digital di banyak wilayah, penelitian ini menggantikan ketergantungan data fisik tersebut dengan indikator lalu lintas implisit. Penggunaan variabel seperti \code{speed\_ratio}, \code{traffic\_shock}, dan \code{stop\_density} memungkinkan model untuk merepresentasikan kondisi kemacetan secara mandiri melalui respons pergerakan kendaraan itu sendiri, tanpa memerlukan \f{input} sensor dari sisi jalan.
+\end{enumerate}
+
+Secara metodologis, penelitian ini memanfaatkan landasan dari penelitian \cite{de2021microscopic} dalam hal penggunaan konteks geometri jalan (elevasi dan kelengkungan) untuk merepresentasikan setiap segmen rute. Sejalan dengan De Nunzio, penelitian ini berasumsi bahwa segmen jalan dengan karakteristik geometris dan batasan kecepatan (\f{speed limit}) yang serupa akan menghasilkan respons dinamis kendaraan yang sebanding.
+
+Namun demikian, terdapat perbedaan mendasar pada sumber informasi lalu lintasnya. Jika studi De Nunzio et al. memanfaatkan informasi kecepatan makroskopik dari sistem GIS dan data \f{traffic speed} eksternal, penelitian ini mengganti seluruh informasi eksplisit tersebut dengan fitur-fitur yang diekstraksi dari data historis perjalanan kendaraan. Dengan demikian, pengaruh lalu lintas dapat ditangkap sepenuhnya melalui perilaku kendaraan yang terobservasi. Sebagai pengembangan lebih lanjut dari kerangka kerja De Nunzio, penelitian ini memperkenalkan mekanisme umpan balik autoregresif. Fitur-fitur lalu lintas implisit pada tahap inferensi tidak bersifat statis, melainkan dihitung secara rekursif berdasarkan hasil prediksi model pada langkah waktu sebelumnya.
+
+Pendekatan ini memungkinkan pembangkitan profil berkendara (\f{drive cycle}) yang realistis secara otonom tanpa bergantung pada API lalu lintas \f{real-time} pihak ketiga yang seringkali memiliki latensi tinggi dan biaya operasional yang mahal. Hasilnya, sistem ini tidak hanya menjamin efisiensi proses simulasi, tetapi juga tetap aplikatif untuk diterapkan pada rute atau wilayah dengan keterbatasan infrastruktur digital.
+
+%-----------------------------------------------------------------------------%
+\section{Model Emisi MOVESTAR}
+\label{sec:movestar}
+%-----------------------------------------------------------------------------%
+Model MOVESTAR (Wang et al., 2020) digunakan untuk mengestimasi emisi berdasarkan profil kecepatan yang dihasilkan.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{assets/pics/diagram_movestar.png}
+    \caption{Diagram Algoritma MOVESTAR}
+    \label{fig:diagramMovestar}
+\end{figure}
+
+Berikut adalah langkah perhitungan MOVESTAR untuk mendapatkan nilai emisi:
+
+    \item Perhitungan VSP \\
+    Langkah pertama adalah menghitung \f{Vehicle Specific Power} (VSP) menggunakan persamaan:
+
+\begin{equation} \label{equ:vspFormula}
+    VSP = \frac{A \cdot v + B \cdot v^2 + C \cdot v^3 + M \cdot (a + g \cdot \sin(\theta)) \cdot v}{f}
+\end{equation}
+
+Keterangan variabel:
+\begin{itemize}
+    \item $v$: Kecepatan kendaraan ($m/s$).
+    \item $a$: Akselerasi kendaraan ($m/s^2$).
+    \item $g$: Konstanta gravitasi ($9.81 \text{ m/s}^2$).
+    \item $\theta$: Sudut kemiringan jalan (\f{grade}) yang diperoleh dari perhitungan $\arctan(\frac{elev\_gain\_m}{\Delta d})$.
+    \item $A, B, C$: Koefisien resistansi jalan dan aerodinamis.
+    \item $M$: Massa kendaraan (ton).
+    \item $f$: Faktor konversi daya.
+\end{itemize}
+    
+    Koefisien A, B, C, M, dan f disesuaikan untuk karakteristik sepeda motor.
+    
+    \item Pemetaan OpMode \\
+    Nilai VSP diklasifikasikan ke dalam 23 \f{Operating Mode} (\f{OpMode}) standar USEPA.
+    
+    \item Estimasi Emisi \\
+    Setiap \f{OpMode} dipetakan ke tingkat emisi dasar (\f{base rate}) untuk \ce{CO2}, CO, dan HC, menghasilkan estimasi total emisi untuk rute tersebut.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Rancangan Arsitektur Sistem dan Orkestrasi MLOps}
+\label{sec:arsitekturSistem}
+%-----------------------------------------------------------------------------%
+Sistem yang dikembangkan dalam penelitian ini merupakan integrasi kompleks antara layanan operasional logistik (\f{legacy system}) dan arsitektur \f{Machine Learning Operations} (MLOps) modern untuk optimasi rute ramah lingkungan. Berdasarkan Gambar \ref{fig:arsitekturSistem}, arsitektur sistem terbagi menjadi empat klaster utama: \f{Frontend}, \f{Backend}, \f{Machine Learning Service} (untuk pemrosesan dimensi), dan \f{MLOps Infrastructure} (untuk prediksi emisi).
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/arsitektur_sistem.png}
+    \caption{Arsitektur Sistem}
+    \label{fig:arsitekturSistem}
+\end{figure}
+
+%-----------------------------------------------------------------------------%
+\subsection{Layanan \f{Frontend}}
+\label{sec:frontend}
+%-----------------------------------------------------------------------------%
+Layanan \f{frontend} terdiri dari aplikasi iOS dan aplikasi Web yang berfungsi sebagai antarmuka utama pengguna:
+
+\begin{itemize}
+    \item Aplikasi iOS \\
+    Bertindak sebagai perangkat pemindai berbasis sensor LiDAR untuk menangkap data spasial boks. Aplikasi ini mengirimkan data mentah \f{point cloud} ke sistem \f{backend}.
+    
+    \item Aplikasi Web \\
+    Berfungsi sebagai dasbor manajemen untuk memvisualisasikan hasil rekomendasi tata letak boks (3D \f{loading plan}) dan rekomendasi rute \f{Green} VRPTW yang dihasilkan oleh sistem.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{Layanan \f{Backend}}
+\label{sec:backend}
+%-----------------------------------------------------------------------------%
+Layanan \f{backend} bertindak sebagai pusat orkestrasi data dan logika bisnis, yang terdiri dari komponen-komponen berikut:
+
+\begin{itemize}
+    \item API Gateway (Node.js/Express) \\
+    Pintu gerbang utama yang menangani seluruh permintaan HTTP dari \f{frontend}. Komponen ini meneruskan data pemindaian ke penyimpanan dan mendistribusikan tugas ke layanan terkait.
+    
+    \item PostgreSQL \& Storage \\
+    Basis data relasional untuk menyimpan data transaksional (pengguna, pesanan, armada) dan layanan penyimpanan berkas (\f{cloud storage}) untuk menyimpan data mentah hasil pindaian.
+    
+    \item RabbitMQ \\
+    \f{Message broker} yang menangani antrean tugas pemrosesan gambar/LiDAR secara asinkron agar tidak membebani layanan utama.
+    
+    \item Django Service (\f{Box Layouting} \& VRPTW) \\
+    Komponen ini memegang peranan krusial sebagai "otak" logika logistik. Selain menjalankan algoritma tata letak boks (BPP), layanan Django ini telah dimodifikasi untuk menangani logika \f{Green} VRPTW. Django bertanggung jawab untuk memicu (\f{trigger}) proses inferensi emisi ke Airflow melalui API dan mengambil hasil akhirnya dari MinIO.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{Layanan \f{Machine Learning} untuk Pemrosesan Dimensi}
+\label{sec:mlService}
+%-----------------------------------------------------------------------------%
+Klaster ini dikhususkan untuk menangani beban komputasi berat terkait pemrosesan data LiDAR yang diwarisi dari penelitian sebelumnya. Layanan ini di-\f{hosting} pada server dengan GPU NVIDIA GT 1030 yang telah dilakukan \textit{Docker-isasi} untuk menjalankan PointOps. Alur kerjanya adalah:
+
+\begin{enumerate}
+    \item \f{Worker} (\f{Message Consumer}) menerima tugas dari RabbitMQ.
+    \item \f{Segmentation Model} menggunakan GPU untuk memisahkan objek boks dari latar belakang pada data \f{point cloud}.
+    \item \f{Dimension Box Algorithm} untuk menghitung dimensi fisik (P x L x T) boks yang akurat. Hasil perhitungan dikembalikan ke \f{backend} untuk disimpan di PostgreSQL.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsection{Infrastruktur MLOps (Markov Chain Model)}
+\label{sec:mlOps}
+%-----------------------------------------------------------------------------%
+Untuk mendukung fitur baru \f{Green} VRPTW, diterapkan arsitektur MLOps menggunakan Apache Airflow dan MinIO. Bagian ini menangani siklus hidup model prediksi emisi (MCM dan MOVESTAR).
+
+\begin{enumerate}
+    \item \f{Pipeline} Data (\f{Ingest})
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/pipeline_ingest.png}
+        \caption{\f{Technical Flow Pipeline Ingest Data}}
+        \label{fig:pipelineIngest}
+    \end{figure}
+    
+    Didefinisikan dalam DAG \code{01\_ingest\_new\_zips.py}, \f{pipeline} ini bertugas memproses data mentah dari Sensor Logger. Proses dimulai dengan deteksi berkas baru, diikuti eksekusi paralel untuk melakukan \f{sensor fusion} (penggabungan data akselerometer, orientasi, dan lokasi). Data kemudian di-\f{resample} menjadi 1 Hz.
+
+dan diselaraskan dengan jaringan jalan (\f{map matching}) sebelum disimpan ke MinIO dalam format CSV.
+
+    \item \f{Pipeline} Pelatihan (\f{Training})
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/pipeline_training_data.png}
+        \caption{\f{Technical Flow Pipeline Training Data}}
+        \label{fig:pipelineTrainingData}
+    \end{figure}
+    
+    Didefinisikan dalam DAG \code{02\_train\_model\_pipeline.py}, dijalankan secara berkala untuk memperbarui model Markov Chain:
+    \begin{enumerate}[label=\alph*.]
+        \item \f{Preprocessing} untuk engelompokkan data perjalanan menjadi segmen logis.
+        \item \f{DTW Selector} digunakan \f{Dynamic Time Warping} untuk memilih segmen referensi representatif.
+        \item \f{Train Markov} untuk membangun matriks probabilitas transisi dari data historis dan menyimpannya sebagai artefak model di MinIO (\code{s3://models/prod/}).
+        \item \f{Validation} untuk menguji performa model menggunakan metrik statistik seperti RMSE.
+    \end{enumerate}
+
+    \item \f{Pipeline} Inferensi dan Integrasi
+    
+    Didefinisikan dalam DAG \code{03\_inference\_pipeline.py}, \f{pipeline} ini dijalankan secara \f{on-demand} untuk melayani permintaan rute dari pengguna:
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/pipeline_inference.png}
+        \caption{\f{Technical Flow Pipeline Inference}}
+        \label{fig:pipelineInference}
+    \end{figure}
+    
+    \begin{enumerate}[label=\alph*.]
+        \item \f{Trigger}, yaitu Layanan Django mengirimkan koordinat asal dan tujuan ke Airflow API.
+        \item \f{Fetch Topology}, dengan cara Airflow mengambil topologi rute dari Google Directions API.
+        \item \f{Generate Cycle}, dengan Model Markov Chain membangkitkan profil kecepatan sintetis berdasarkan topologi rute.
+        \item Perhitungan MOVESTAR dengan memasukkan profil kecepatan ke model MOVESTAR untuk menghitung total estimasi emisi \ce{CO2}.
+        \item \f{Result Retrieval}, yaitu menyimpan hasil estimasi di MinIO dalam format JSON. Django melakukan \f{polling} status tugas secara berkala, dan setelah selesai, mengunduh hasil dari MinIO untuk ditampilkan sebagai rekomendasi rute terhijau.
+    \end{enumerate}
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\subsection{Infrastruktur MLOps (Model \f{Machine Learning})}
+\label{sec:mlOpsML}
+%-----------------------------------------------------------------------------%
+Dalam penelitian ini, proses pelatihan dan inferensi model \f{machine learning} (ML) tidak dilakukan secara manual, tetapi dibangun menggunakan pendekatan MLOps untuk memastikan alur kerja yang terautomasi, terstruktur, dan dapat direproduksi. Infrastruktur MLOps dirancang berbasis komponen \f{open-source} yang mendukung \f{orchestrator pipeline}, penyimpanan data, manajemen artefak model, serta integrasi antar modul.
+
+Sistem MLOps ini terdiri dari empat komponen utama: Apache Airflow, MinIO Object Storage, Docker Containerization, dan Python ML Environment. Infrastruktur MLOps untuk model ini dirancang untuk menangani kompleksitas pelatihan model regresi dan validasi kualitas prediksi secara otomatis.
+
+\begin{enumerate}
+    \item \f{Pipeline} Data (\f{Ingest})
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/pipeline_data_ml_pembanding.png}
+        \caption{\f{Technical Flow Pipeline Data} ML Pembanding}
+        \label{fig:pipelineDataML}
+    \end{figure}
+    
+    Seperti pada Markov Chain Model, didefinisikan DAG \code{01\_ingest\_new\_zips.py} untuk memproses data mentah dari Sensor Logger. Proses dimulai dengan deteksi berkas baru, diikuti eksekusi paralel untuk melakukan \f{sensor fusion} (penggabungan data akselerometer, orientasi, dan lokasi). Data kemudian di-\f{resample} menjadi 1 Hz dan diselaraskan dengan jaringan jalan (\f{map matching}) sebelum disimpan ke MinIO dalam format CSV.
+    
+    \item \f{Pipeline} Pelatihan (\f{Training})
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=0.8\textwidth]{assets/pics/pipeline_training_ml_pembanding.png}
+        \caption{\f{Technical Flow Pipeline Training Data} ML Pembanding}
+        \label{fig:pipelineTrainingML}
+    \end{figure}
+    
+    Didefinisikan dalam \f{notebook} \code{03\_simplified\_train\_ml\_speed\_accel.ipynb}, \f{pipeline} ini bertujuan untuk melatih model regresi yang memetakan fitur jalan menjadi profil kecepatan. Proses utamanya meliputi:
+    \begin{enumerate}[label=\alph*.]
+        \item \f{Ingest \& Grouping} \\
+        Data perjalanan historis (\f{processed-data}) dimuat dari MinIO.
+        \item \f{Feature Engineering} \\
+        Sistem menghitung fitur dinamis secara otomatis, meliputi \f{Traffic Level} (berdasarkan \f{free-flow speed} persentil ke-95), \f{Turn Count} (frekuensi belokan tajam), dan \f{Elevation Gain}. Fitur \f{lag} (kecepatan t-1, t-2) juga dibentuk untuk menangkap pola urutan waktu.
+        \item \f{Training \& Selection} \\
+        Menggunakan \f{Grid Search} dengan \f{Group K-Fold}, sistem melatih berbagai algoritma (Random Forest, XGBoost, SVR) untuk menemukan model dengan RMSE terendah.
+        \item \f{Artifact Saving} \\
+        Model terbaik beserta \f{scaler}-nya disimpan kembali ke MinIO sebagai \code{speed\_accel\_model.pkl} untuk digunakan pada tahap inferensi.
+    \end{enumerate}
+    
+    \item \f{Pipeline} Inferensi dan Integrasi
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/pipeline_inference_ml_pembanding.png}
+        \caption{\f{Technical Flow Pipeline Inference} pada ML pembanding}
+        \label{fig:pipelineInferenceML}
+    \end{figure}
+    
+    Berbeda dengan pelatihan, \f{pipeline} ini dijalankan secara \f{on-demand} ketika pengguna meminta rekomendasi rute. Proses ini mengintegrasikan data eksternal, model ML, dan perhitungan emisi dengan tahapan berikut:
+    \begin{enumerate}
+        \item \f{Fetch Topology} \\
+        Berdasarkan koordinat asal dan tujuan, sistem mengambil data rute dari Google Maps API dan mengekstraksi fitur statis seperti jarak kumulatif, elevasi (\f{elevation gain}), dan frekuensi belokan.
+        \item \f{ML inference to predict Speed dan Acceleration} \\
+        Menggunakan artefak model terbaik dari MinIO untuk memprediksi profil kecepatan dan akselerasi detik-ke-detik untuk rute tersebut.
+        \item \f{Emission Calculation} \\
+        Profil prediksi dimasukkan ke dalam algoritma MOVESTAR untuk menghitung estimasi total emisi (\ce{CO2}, HC, CO). Hasil akhir disimpan dalam format JSON di MinIO agar dapat diambil dan ditampilkan oleh aplikasi pengguna.
+    \end{enumerate}
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Skenario Pengujian dan Evaluasi}
+\label{sec:skenarioPengujian}
+%-----------------------------------------------------------------------------%
+Untuk menjamin validitas sistem \f{Green} VRPTW yang dikembangkan, evaluasi dilakukan secara holistik terhadap dua komponen kritis dalam \f{pipeline} prediksi: komponen hulu yang membangkitkan profil kecepatan (\f{drive cycle generation}) dan komponen hilir yang mengonversi profil tersebut menjadi estimasi emisi. Oleh karena itu, penelitian ini menetapkan dua skenario pengujian utama:
+
+\begin{enumerate}
+    \item Evaluasi Kualitas \f{Drive Cycle} (Skenario Pengujian I) \\
+    Skenario ini bertujuan menguji performa model Markov Chain (MCM) dalam mereplikasi karakteristik berkendara dunia nyata. Evaluasi tidak hanya dilakukan terhadap data historis, tetapi juga dibandingkan dengan model-model \f{machine learning} deterministik (\f{baseline models}) seperti SVR, Random Forest, dan XGBoost. Fokus utama pengujian ini adalah membuktikan keunggulan pendekatan stokastik dalam menangkap distribusi kecepatan dan akselerasi yang krusial bagi perhitungan beban mesin. Detail metode perbandingan dan metrik evaluasi untuk skenario ini akan dibahas pada Subbab \ref{sec:evaluasiDriveCycle}.
+    
+    \item Validasi Akurasi Model Emisi (Skenario Pengujian II) \\
+    Skenario ini bertujuan memverifikasi keandalan \f{output} akhir sistem. Pengujian dilakukan dengan membandingkan estimasi emisi komputasional dari model MOVESTAR terhadap data emisi riil yang direkam oleh sensor IoT pada kendaraan operasional. Validasi ini berfungsi sebagai \f{ground truth} untuk mengukur seberapa dekat prediksi sistem dengan kondisi lapangan yang sebenarnya. Detail prosedur validasi lapangan ini akan dibahas pada Subbab \ref{sec:evaluasiModelEmisi}.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Evaluasi Kualitas \f{Drive Cycle} (Skenario Pengujian I)}
+\label{sec:evaluasiDriveCycle}
+%-----------------------------------------------------------------------------%
+Evaluasi ini bertujuan untuk memvalidasi performa model utama (Markov Chain Model) serta model pembanding (\f{Baseline Models}) dalam menghasilkan profil kecepatan yang tidak hanya realistis secara kinematik, tetapi juga akurat dalam merepresentasikan beban mesin yang berdampak pada emisi.
+
+%-----------------------------------------------------------------------------%
+\subsection{Model yang Dievaluasi}
+\label{sec:modelDievaluasi1}
+%-----------------------------------------------------------------------------%
+Performa model \f{Markov Chain Model} (MCM) dibandingkan dengan beberapa model \f{machine learning} deterministik dan \f{ensemble} untuk mengevaluasi efektivitas pendekatan stokastik dalam memodelkan perilaku berkendara dibandingkan pendekatan regresi murni. Model pembanding yang digunakan dalam penelitian ini meliputi \f{Support Vector Regression} (SVR), \f{Random Forest} (RF), \f{XGBoost}, \f{Decision Tree}, dan \f{Artificial Neural Networks} (ANN).
+
+Pemilihan model pembanding didasarkan pada studi literatur yang relevan dengan prediksi kondisi lalu lintas, tingkat kemacetan berbasis rute, serta generasi \f{driving cycle} secara mikroskopis.
+Model \f{Decision Tree} dan \f{Random Forest} dipilih karena telah terbukti memiliki performa yang baik dalam prediksi \f{traffic congestion} dan \f{traffic level} berbasis karakteristik jalan serta faktor lingkungan (Tamir et al., 2020; Yunxiang, 2017). Model-model ini efektif dalam menangkap hubungan nonlinier dan interaksi antar fitur yang umum dijumpai pada data lalu lintas.
+
+Sementara itu, model SVR, XGBoost, dan ANN dipilih berdasarkan penelitian yang berfokus pada prediksi kecepatan kendaraan dan \f{driving cycle} menggunakan data \f{time-series} atau data GPS. SVR menunjukkan akurasi yang baik dalam memodelkan pola kecepatan kendaraan berbasis riwayat perjalanan (Dwina & Putri, 2017). Model \f{ensemble} berbasis \f{boosting} seperti XGBoost dilaporkan memiliki stabilitas yang lebih baik dan tingkat \f{error} yang lebih rendah dalam prediksi kecepatan kendaraan (Rubasinghe & Hettiarachchi, 2023), sedangkan ANN digunakan sebagai pembanding model nonlinier berbasis pembelajaran representasi yang umum digunakan dalam pemodelan perilaku berkendara berbasis data GPS (Dwina & Putri, 2017).
+
+Dengan membandingkan MCM terhadap berbagai pendekatan \f{machine learning} tersebut, penelitian ini bertujuan untuk menilai keunggulan dan keterbatasan pendekatan stokastik dalam merepresentasikan dinamika \f{driving cycle} pada tingkat mikroskopis.
+
+%-----------------------------------------------------------------------------%
+\subsection{Pembagian Data (\f{Data Splitting})}
+\label{sec:pembagianData}
+%-----------------------------------------------------------------------------%
+Total data perjalanan yang dikumpulkan pada tahap pengumpulan data akan dibagi dengan rasio 80:20.
+
+\begin{itemize}
+    \item 80\% Data Latih (\f{Training Set}) digunakan untuk membangun Matriks Probabilitas Transisi pada model Markov. Data ini mencakup berbagai kondisi lalu lintas dan gaya berkendara (\f{normal} dan \f{aggressive}) untuk membentuk ruang keadaan (\f{state space}) yang komprehensif.
+    \item 20\% Data Uji (\f{Testing Set}) disisihkan sebagai \f{ground truth} atau referensi validasi. Data ini tidak digunakan dalam proses pelatihan model.
+\end{itemize}
+
+Evaluasi dilakukan dengan membangkitkan \f{drive cycle} sintetis pada rute yang sama dengan rute yang terdapat pada Data Uji. Profil sintetis tersebut kemudian dibandingkan dengan profil asli dari Data Uji menggunakan parameter statistik. Tujuannya bukan untuk mereplikasi profil kecepatan detik-demi-detik secara persis (karena kondisi lalu lintas bersifat stokastik), melainkan untuk memastikan distribusi karakteristik berkendaranya serupa.
+
+%-----------------------------------------------------------------------------%
+\subsection{Metrik Evaluasi}
+\label{sec:metrikEvaluasi}
+%-----------------------------------------------------------------------------%
+Mengacu pada metode validasi yang digunakan oleh Keskin et al. (2023) dan Pirayre et al. (2022), metrik yang digunakan adalah:
+
+\begin{enumerate}
+    \item VSP Bin Distribution Error (Validasi Emisi) \\
+    Karena tujuan akhir penelitian adalah akurasi estimasi emisi, dan model MOVESTAR menghitung emisi berdasarkan \f{Vehicle Specific Power} (VSP) Bins (atau \f{Operating Modes}), maka akurasi distribusi VSP menjadi indikator paling krusial. Jika model menghasilkan profil kecepatan yang secara kinematik mirip tetapi memiliki distribusi VSP yang berbeda (misalnya, terlalu banyak berada di \f{High Power Mode}), maka perhitungan emisi akan bias. Untuk mengukur hal ini, digunakan \f{Root Mean Square Error} (RMSE) yang diterapkan pada histogram frekuensi VSP, bukan pada data deret waktu.
+    
+    \begin{align}
+        \label{equ:rmseVSP}
+        \text{RMSE}_{\text{VSP}} = \sqrt{\frac{\sum_{k=1}^{K} (f_{\text{gen},k} - f_{\text{real},k})^2}{K}}
+    \end{align}
+    
+    Di mana :
+    \begin{itemize}
+        \item K: Jumlah VSP Bins atau \f{Operating Modes} (Mode 0-22).
+        \item $f_{gen,k}$: Frekuensi relatif (persentase waktu) model berada di mode k pada data hasil generasi.
+        \item $f_{real,k}$: Frekuensi relatif model berada di mode k pada data \f{ground truth}.
+    \end{itemize}
+    
+    Metrik ini dipilih karena lebih relevan daripada RMSE pada kecepatan rata-rata. RMSE VSP yang rendah menjamin bahwa \f{drive cycle} sintetis memiliki proporsi \f{idling}, \f{cruising}, dan akselerasi beban tinggi yang setara dengan kenyataan, sehingga estimasi emisi yang dihasilkan akan akurat.
+    
+    \item Perbandingan Parameter Kinematik dengan membandingkan selisih relatif (\f{relative error}) antara data sintetis dan asli pada parameter kunci:
+    \begin{enumerate}[label=\alph*.]
+        \item Kecepatan rata-rata ($\tilde{v}$).
+        \item Akselerasi rata-rata ($\bar{a}$).
+    \end{enumerate}
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Evaluasi Kualitas Model Emisi (Skenario Pengujian II)}
+\label{sec:evaluasiModelEmisi}
+%-----------------------------------------------------------------------------%
+Skenario ini merupakan validasi akhir untuk membuktikan bahwa integrasi model
+\f{machine learning} dan MOVESTAR dapat menghasilkan estimasi emisi yang akurat dan
+dapat diandalkan sebagai dasar penentuan rute ramah lingkungan.
+
+%-----------------------------------------------------------------------------%
+\subsection{Prosedur Uji Lapangan}
+\label{sec:prosedurUjiLapangan}
+%-----------------------------------------------------------------------------%
+Pengujian Skenario II (Sensor Logger + MOVESTAR vs \f{Ground Truth}) dilakukan secara langsung menggunakan sepeda motor Yamaha NMAX yang dilengkapi dengan perangkat IoT.
+
+Untuk menjamin keamanan instrumen dan validitas data, ditetapkan rute uji spesifik di lingkungan internal kampus Universitas Indonesia. Rute ini dimulai dari Gedung Lama Fakultas Ilmu Komputer (Fasilkom UI) dan berakhir di \f{Faculty Club} UI (Felfest), sebagaimana divisualisasikan pada Gambar \ref{fig:ruteUjiValidasi}.
+
+\begin{figure}[t!]
+    \centering
+    % Pastikan nama file gambar sesuai dengan yang Anda simpan di folder assets
+    \includegraphics[width=0.5\textwidth]{assets/pics/rute_uji_validasi_fasilkom_felfest.jpeg}
+    \caption{Peta Rute Uji Validasi (Gedung Lama Fasilkom - Felfest UI)}
+    \label{fig:ruteUjiValidasi}
+\end{figure}
+
+Pemilihan rute internal kampus ini didasarkan pada pertimbangan mitigasi risiko fisik terhadap perangkat keras. Mengingat perangkat IoT dipasang pada bagian luar kendaraan (\f{exterior mounting}) menggunakan perekat sementara, jalur kampus yang memiliki \f{traffic} lebih terkendali dan kualitas aspal yang relatif baik dipilih untuk meminimalisir guncangan ekstrem. Hal ini bertujuan mencegah risiko perangkat terlepas atau rusak yang mungkin terjadi jika pengujian dilakukan di jalan raya umum dengan kondisi lalu lintas padat dan permukaan jalan yang tidak rata.
+
+Prosedur teknis pengujian adalah sebagai berikut:
+\begin{enumerate}
+    \item Kendaraan dikendarai pada rute tersebut dengan durasi total sekitar 7-8 menit untuk satu kali jalan.
+    \item Perangkat IoT merekam konsentrasi gas (\ce{CO2}, CO, HC) dari knalpot setiap detik sebagai data \f{ground truth}.
+    \item Secara simultan, aplikasi Sensor Logger pada \f{smartphone} merekam data kinematik (kecepatan dan akselerasi).
+    \item Data kecepatan dari Sensor Logger kemudian dimasukkan ke dalam model MOVESTAR untuk menghasilkan nilai prediksi emisi yang akan dibandingkan dengan data IoT.
+\end{enumerate}

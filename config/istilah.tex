@@ -1,0 +1,51 @@
+%
+% @author  Andreas Febrian
+% @version 2.2.1
+% @edit by Ichlasul Affan
+%
+% Mendaftar seluruh istilah yang mungkin akan perlu dijadikan
+% italic atau bold pada setiap kemunculannya dalam dokumen.
+%
+
+% Istilah/alias yang tidak perlu dimasukkan ke dalam Glossary/Daftar Istiilah
+\var{\license}{\f{Creative Common License 1.0 Generic}}
+\var{\bslash}{$\setminus$}
+
+\makeglossaries
+
+% --- AKRONIM ---
+\newacronym{vrptw}{VRPTW}{\f{Vehicle Routing Problem with Time Windows}}
+\newacronym{iot}{IoT}{\f{Internet of Things}}
+\newacronym{mlops}{MLOps}{\f{Machine Learning Operations}}
+\newacronym{vsp}{VSP}{\f{Vehicle Specific Power}}
+\newacronym{mcm}{MCM}{\f{Markov Chain Model}}
+\newacronym{lidar}{LiDAR}{\f{Light Detection and Ranging}}
+\newacronym{rmse}{RMSE}{\f{Root Mean Square Error}}
+\newacronym{mape}{MAPE}{\f{Mean Absolute Percentage Error}}
+\newacronym{gnss}{GNSS}{\f{Global Navigation Satellite System}}
+\newacronym{bpp}{BPP}{\f{Bin Packing Problem}}
+
+% --- ISTILAH ---
+\newglossaryentry{green_logistics}
+{
+	name={Green Logistics},
+	description={Praktik logistik yang bertujuan meminimalisir dampak ekologis dari kegiatan logistik, mencakup transportasi, pergudangan, dan distribusi}
+}
+
+\newglossaryentry{movestar}
+{
+	name={MOVESTAR},
+	description={Model estimasi emisi kendaraan berbasis daya spesifik kendaraan (VSP) yang dikembangkan untuk menangkap dinamika emisi skala mikro}
+}
+
+\newglossaryentry{legacy_system}
+{
+	name={Legacy System},
+	description={Sistem perangkat lunak atau perangkat keras lama yang masih digunakan dalam organisasi, meskipun teknologi yang lebih baru sudah tersedia}
+}
+
+\newglossaryentry{ground_truth}
+{
+	name={Ground Truth},
+	description={Informasi yang diperoleh melalui pengamatan langsung (pengukuran empiris) yang digunakan sebagai acuan kebenaran untuk memvalidasi model}
+}

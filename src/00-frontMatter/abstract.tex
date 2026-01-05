@@ -1,0 +1,44 @@
+%
+% Halaman Abstract
+%
+% @author  Andreas Febrian
+% @version 2.2.0
+% @edit by Ichlasul Affan
+%
+
+\chapter*{ABSTRACT}
+\singlespacing
+
+\noindent \begin{tabular}{l l p{11.0cm}}
+	\ifx\blank\npmDua
+		Name&: & \penulisSatu \\
+		Study Program&: & \studyProgramSatu \\
+	\else
+		Writer 1 / Study Program&: & \penulisSatu~/ \studyProgramSatu\\
+		Writer 2 / Study Program&: & \penulisDua~/ \studyProgramDua\\
+	\fi
+	\ifx\blank\npmTiga\else
+		Writer 3 / Study Program&: & \penulisTiga~/ \studyProgramTiga\\
+	\fi
+	Title&: & \judulInggris \\
+	Counselor&: & \pembimbingSatu \\
+	\ifx\blank\pembimbingDua
+	\else
+		\ &\ & \pembimbingDua \\
+	\fi
+	\ifx\blank\pembimbingTiga
+	\else
+		\ &\ & \pembimbingTiga \\
+	\fi
+\end{tabular} \\
+
+\vspace*{0.5cm}
+
+\noindent In the evolution of the logistics industry towards sustainability, operational efficiency encompasses the minimization of air pollution impact. Although a cargo loading recommendation system was developed in previous research at PT XYZ, the routing process remains conventional without considering carbon footprints. This research aims to develop a Green Vehicle Routing Problem with Time Windows (Green VRPTW) system through three integrated technical contributions. First, the development of predictive models to generate realistic drive cycles, evaluating autoregressive Machine Learning approaches against Markov Chain models to capture driving dynamics. Second, the construction of a modern MLOps architecture using Apache Airflow and MinIO to orchestrate the MOVESTAR emission model and integrate environmental cost calculations into the company's legacy backend infrastructure. Third, the engineering of a custom Internet of Things (IoT) hardware device specifically designed for real-time emission data acquisition (\ce{CO$_2$}, CO, HC) as a ground-truth validation instrument. Evaluation results demonstrate the synergy of these components: (1) The Machine Learning approach (Random Forest) outperformed the Markov Chain model in replicating driving dynamics with an R$^2$ score of 0.9806 for speed and a low Vehicle Specific Power (VSP) distribution \f{root mean square error} (RMSE) of 0.016; (2) The system infrastructure successfully automated eco-friendly route recommendations end-to-end; and (3) IoT validation confirmed the emission model's reliability with a Relative Error Total of 25.13\% and an RMSE of 1.65 g/s. \\
+
+\vspace*{0.2cm}
+
+\noindent Key words: \\ Green VRPTW, MOVESTAR, Machine Learning, Markov Chain, MLOps, Internet of Things (IoT), emission estimation \\
+
+\setstretch{1.4}
+\newpage

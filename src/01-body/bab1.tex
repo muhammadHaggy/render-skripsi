@@ -1,0 +1,122 @@
+%-----------------------------------------------------------------------------%
+\chapter{\babSatu}
+\label{bab:1}
+%-----------------------------------------------------------------------------%
+Pada Bab Pendahuluan akan dijelaskan mengenai latar belakang penelitian, permasalahan yang dihadapi, rumusan masalah yang ingin diselesaikan, tujuan penelitian, posisi penelitian dari ketiga penulis, serta sistematika penulisan laporan dalam penelitian ini.
+
+%-----------------------------------------------------------------------------%
+\section{Latar Belakang}
+\label{sec:latarBelakang}
+%-----------------------------------------------------------------------------%
+Dalam ekosistem industri logistik modern, paradigma efisiensi telah bergeser dari sekadar kecepatan pengiriman dan optimalisasi ruang muat, menuju keberlanjutan lingkungan (\f{sustainability}). Sektor logistik dan transportasi merupakan salah satu penyumbang terbesar emisi gas rumah kaca global. Oleh karena itu, konsep \f{Green Logistics} menjadi krusial, di mana perencanaan operasional tidak hanya berorientasi pada minimasi biaya finansial, tetapi juga minimasi dampak lingkungan. Salah satu implementasi nyata dari konsep ini adalah \f{Green Vehicle Routing Problem} (Green VRP), yang bertujuan menentukan rute distribusi paling efisien secara energi dan rendah emisi \citep{asghari2020green}.
+
+PT XYZ, sebagai perusahaan logistik mandiri, berupaya memodernisasi operasionalnya secara menyeluruh. Penelitian sebelumnya oleh \citet{abdillah2025pengembangan} telah berhasil membangun fondasi sistem rekomendasi tata letak pemuatan barang (\f{loading optimization}) untuk mengefisiensikan penggunaan ruang dalam armada truk. Namun, sistem logistik yang holistik tidak hanya berhenti pada pemuatan barang, melainkan memerlukan perencanaan pergerakan armada (\f{routing}) yang cerdas. Tantangan utamanya adalah menyeimbangkan efisiensi waktu pelayanan (\f{time windows}) dengan minimalisasi emisi karbon di seluruh rantai distribusi, baik untuk armada besar maupun kecil \citep{asghari2020green}.
+
+Meskipun armada logistik PT XYZ didominasi oleh kendaraan pengangkut barang, prinsip dasar perhitungan emisi pada dasarnya bergantung pada fisika pergerakan kendaraan (\f{kinematics}) yang direpresentasikan oleh profil berkendara (\f{drive cycle}) dan beban mesin. Penelitian ini bertujuan mengembangkan sistem \f{Green Vehicle Routing Problem with Time Windows} (Green VRPTW) yang dirancang untuk dapat diterapkan secara luas dalam ekosistem logistik PT XYZ. Sebagai tahap validasi model dan pembuktian konsep (\f{proof of concept}), penelitian ini menggunakan sepeda motor sebagai objek studi kasus untuk pengumpulan data. Pemilihan ini didasarkan pada fleksibilitas operasional dan kemudahan akuisisi data lapangan, namun arsitektur sistem yang dibangun bersifat agnostik dan dirancang agar dapat dikonfigurasi ulang untuk berbagai jenis kendaraan logistik di masa depan.
+
+Tantangan utama dalam mengimplementasikan \f{Green} VRP adalah kompleksitas dalam menghitung estimasi emisi secara akurat. Literatur \f{Green} VRP menunjukkan bahwa emisi tidak hanya bergantung pada jarak tempuh, melainkan dipengaruhi secara non-linear oleh faktor dinamis seperti kecepatan, akselerasi, dan beban mesin \citep{bektas2011pollution, demir2014review, asghari2020green}. Model emisi konvensional yang hanya berbasis jarak seringkali gagal menangkap dinamika ini, sementara model mikroskopis yang terlalu kompleks sulit diterapkan dalam operasional waktu nyata.
+
+Oleh karena itu, penelitian ini membatasi lingkup estimasi emisi menggunakan pendekatan \f{Vehicle Specific Power} (VSP) melalui model MOVESTAR \citep{wang2020movestar}. Pendekatan ini dipilih karena menawarkan keseimbangan antara akurasi perhitungan beban mesin dan efisiensi komputasi yang diperlukan untuk optimalisasi rute.
+
+Kompleksitas perhitungan VSP yang membutuhkan pengolahan data kecepatan dan akselerasi dalam volume besar menuntut adanya sistem yang mampu mengelola alur data secara otomatis dan terukur. Hal inilah yang mendasari kebutuhan akan arsitektur sistem berbasis \f{Machine Learning Operations} (MLOps) untuk mengintegrasikan proses inferensi model ke dalam sistem logistik operasional. Lebih lanjut, \citet{asghari2020green} dalam tinjauan literatur terbarunya menyoroti pentingnya penggunaan informasi transportasi waktu nyata (\f{real-time transportation information}) sebagai fondasi penelitian \f{Green} VRP masa depan. Sejalan dengan rekomendasi tersebut, penelitian ini tidak hanya berhenti pada model teoritis, tetapi juga melakukan validasi empiris menggunakan data riil lapangan yang dikumpulkan melalui sensor IoT untuk mengukur kesenjangan antara prediksi model dan emisi aktual.
+
+%-----------------------------------------------------------------------------%
+\section{Rumusan Masalah}
+\label{sec:rumusanMasalah}
+%-----------------------------------------------------------------------------%
+Pada bagian ini akan dijelaskan mengenai definisi permasalahan yang penulis hadapi. Berdasarkan latar belakang yang telah dijabarkan sebelumnya, diperoleh tiga definisi masalah yang ingin dipecahkan dalam penelitian ini, yaitu:
+\begin{enumerate}
+    \item Bagaimana cara mengimplementasikan sistem \textit{end-to-end} dari \textit{Green} VRPTW yang terintegrasi dengan infrastruktur \textit{backend} \textit{legacy} milik PT XYZ?
+    \item Bagaimana perbandingan performa antara pendekatan stokastik (\textit{Markov Chain Model}) dan pendekatan \f{machine learning} dalam membangkitkan \textit{drive cycle} yang realistis sebagai dasar perhitungan estimasi emisi pada model MOVESTAR?
+    \item Seberapa akurat hasil estimasi emisi yang dihasilkan oleh sistem komputasi jika dibandingkan dengan data \textit{ground truth} yang diperoleh dari sensor emisi \textit{Internet of Things} (IoT) secara riil di lapangan?
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Batasan Penelitian}
+\label{sec:batasanPenelitian}
+%-----------------------------------------------------------------------------%
+Dalam penelitian ini, ada beberapa batasan dan juga asumsi yang digunakan dalam menyelesaikannya. Berikut merupakan batasan ruang lingkup penelitian, yaitu:
+\begin{enumerate}
+	\item Penelitian ini menggunakan pendekatan mikroskopis dengan unit analisis berupa data per detik yang merepresentasikan perilaku kendaraan melalui kecepatan dan akselerasi.
+	\item Prediksi dibatasi pada profil berkendara (\f{driving cycle}), yaitu kecepatan dan akselerasi kendaraan. Estimasi emisi dihitung secara mikroskopis per \f{time-step} dan diakumulasi, bukan secara agregat pada tingkat perjalanan (\f{trip-based}).
+	\item Estimasi emisi dilakukan menggunakan model MOVESTAR berbasis \f{Vehicle Specific Power} (VSP) dan tidak menggunakan model \f{machine learning} secara \f{end-to-end} untuk memprediksi emisi secara langsung.
+	\item Model tidak mempertimbangkan interaksi antar kendaraan (seperti \f{car-following} dan \f{lane-changing}) maupun kondisi lalu lintas makroskopis, serta mengabaikan faktor eksternal seperti cuaca dan kondisi lingkungan.
+	\item Beban kendaraan (\f{payload}), kondisi mesin, dan degradasi kendaraan diasumsikan konstan selama perjalanan.
+    \item Sistem \f{Green} VRPTW yang dikembangkan ditujukan untuk manajemen logistik secara umum, namun validasi model dan pengambilan data eksperimental dibatasi menggunakan satu unit sepeda motor Yamaha NMAX.
+    \item Parameter emisi yang digunakan dalam model saat ini disesuaikan dengan karakteristik sepeda motor, namun struktur \f{cost matrix} pada sistem dirancang agar dapat dikonfigurasi ulang untuk jenis kendaraan lain (seperti truk) di masa mendatang.
+    \item Infrastruktur sistem utama (API Gateway, Database, Django) menggunakan \f{legacy code} dari penelitian \citet{abdillah2025pengembangan} dengan modifikasi dan penambahan modul untuk keperluan \f{routing}.
+    \item Perangkat keras untuk \f{inference} model \f{machine learning} dan algoritma pendukung (PointOps) menggunakan server dengan GPU NVIDIA GeForce GT 1030.
+    \item Pengumpulan data kinematik kendaraan (kecepatan, akselerasi) menggunakan \f{smartphone} dengan aplikasi Sensor Logger yang dipasang pada \f{fixed bracket} agar orientasi sensor mengikuti orientasi kendaraan.
+    \item Pengukuran data emisi riil menggunakan sensor IoT yang dipasang pada saluran pembuangan (knalpot) dengan asumsi laju aliran udara (\f{flow rate}) konstan yang dihasilkan oleh kipas \f{blower}.
+    \item Pengukuran data emisi riil menggunakan sensor IoT diasumsikan berada pada kondisi temperatur udara ruang sensor yang ideal (sekitar 25$^{\circ}$C) untuk menjaga stabilitas pembacaan sensor.
+    \item Perpindahan data dari sistem IoT ke sistem MLOps masih belum bisa dilakukan secara \textit{real-time} dan untuk saat ini masih menggunakan metode manual dengan cara memindahkan data dari SD Card ke komputer baru kemudian diolah.
+    \item Pengukuran suhu sistem IoT menggunakan \textit{thermogun} yang diarahkan ke permukaan sistem IoT yang ingin dilakukan pengecekan serta pengukuran suhu lingkungan dilakukan dengan menggunakan \textit{thermometer} raksa.
+    
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Tujuan Penelitian}
+\label{sec:tujuanPenelitian}
+%-----------------------------------------------------------------------------%
+Berikut ini merupakan tujuan dari penelitian ini, yaitu:
+\begin{enumerate}
+    \item Menghasilkan sistem rekomendasi rute \f{Green} VRPTW yang terotomatisasi menggunakan arsitektur MLOps (Airflow dan MinIO) dan terintegrasi dengan sistem operasional PT XYZ.
+    \item Mengimplementasikan model \f{machine learning} untuk \f{Drive Cycle Generation} dan model MOVESTAR guna menghasilkan estimasi emisi yang digunakan sebagai bobot biaya (\f{cost matrix}) dalam penentuan rute.
+    \item Memvalidasi performa model estimasi emisi MOVESTAR dengan membandingkan hasil \f{Vehicle Specific Power} (VSP) dan emisi terhadap data riil yang diperoleh dari sensor IoT.
+\end{enumerate}
+
+%-----------------------------------------------------------------------------%
+\section{Posisi Penelitian}
+\label{sec:posisiPenelitian}
+%-----------------------------------------------------------------------------%
+Penelitian dan pengembangan ini merupakan evolusi lanjutan dari ekosistem logistik yang telah dibangun secara bertahap oleh para pendahulu. Landasan utama penelitian ini mengacu pada sistem yang dikembangkan oleh \citet{abdillah2025pengembangan}  dengan judul Pengembangan Sistem Rekomendasi Tata Letak Pemuatan Barang ke Dalam Truk Berbasis LiDAR untuk Optimasi Logistik pada PT XYZ.
+
+Sistem warisan dari \citet{abdillah2025pengembangan} tersebut bukanlah entitas yang berdiri sendiri, melainkan hasil integrasi dari tiga aliran penelitian sebelumnya:
+
+\begin{enumerate}
+    \item Teknologi Pemindaian 3D, dengan memanfaatkan teknologi LiDAR dan pemrosesan \f{point cloud} yang diwarisi dari penelitian \citet{marcellino2024implementasi} tentang Gaussian Splatting, serta \citet{kaiser2022segmentasi} mengenai Edge Computing untuk segmentasi objek.
+    \item Sistem Manajemen Logistik, dengan mengadopsi kerangka kerja sistem rekomendasi dan alur operasional logistik yang dirintis oleh \citet{aurora2023pengembangan}.
+    \item Algoritma Optimasi, dengan menggunakan algoritma Biased Random-Key Genetic Algorithm (BRKGA) untuk penyusunan barang (Bin Packing) yang didasarkan pada teori \citet{goncalves2013biased}.
+\end{enumerate}
+
+Posisi penelitian saat ini (Haggy, Navis, dan Shafa, 2025) adalah memperluas kapabilitas sistem tersebut dari sekadar optimasi ruang muat (\f{loading}) menjadi optimasi pergerakan armada (\f{routing}) yang berwawasan lingkungan. Pembaruan utama dalam penelitian ini adalah integrasi model estimasi emisi dan bahan bakar MOVESTAR yang dikembangkan oleh \citet{wang2020movestar}. Dengan menggabungkan infrastruktur \f{backend} dan data dari \citet{abdillah2025pengembangan} bersama model emisi dari \citet{wang2020movestar}, penelitian ini menghasilkan sistem \f{Green Vehicle Routing Problem} (Green VRPTW) yang komprehensif.
+
+Untuk memperjelas alur evolusi dan integrasi antar penelitian tersebut, berikut pada Gambar \ref{fig:posisiPenelitian} merupakan visualisasi dari posisi penelitian yang dilakukan.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/pics/posisi_penelitian.png}
+    \caption{Posisi Penelitian}
+    \label{fig:posisiPenelitian}
+\end{figure}
+
+Berdasarkan posisi penelitian yang telah dijelaskan sebelumnya, penelitian ini dikembangkan sebagai suatu sistem terintegrasi yang menggabungkan pemodelan \f{driving cycle}, estimasi emisi kendaraan, serta validasi berbasis perangkat \f{IoT}. Kompleksitas penelitian ini tidak hanya terletak pada pengembangan model prediksi, tetapi juga pada integrasi antar-komponen sistem yang mencakup pemrosesan data, orkestrasi pipeline, serta implementasi model estimasi emisi. Oleh karena itu, proses penelitian dan pengembangan dilakukan secara kolaboratif dengan pembagian tanggung jawab yang jelas untuk memastikan setiap komponen sistem dapat dikembangkan dan diintegrasikan secara optimal.
+
+Dalam penelitian ini, proses pengembangan dan implementasi sistem dibagi menjadi tiga bagian sebagai berikut:
+\begin{description}
+    \item[Muhammad Haggy] bertanggung jawab pada implementasi arsitektur MLOps (Airflow dan MinIO), kontainerisasi \textit{environment machine learning}, implementasi MOVESTAR, serta \textit{deployment} dan integrasi sistem secara \textit{end-to-end} dengan sistem terdahulu.
+    
+    \item[Shafa Trivia Ezananda] bertanggung jawab pada pengembangan model \textit{machine learning} untuk \textit{drive cycle generation} (termasuk \textit{Markov Chain Model}), serta \textit{preprocessing} data rute dan spasial.
+    
+    \item[Muhammad Navis R. R.] bertanggung jawab pada pengembangan perangkat IoT untuk pembacaan emisi gas (\ce{CO2}, CO, HC), integrasi sensor, serta pengumpulan data validasi lapangan.
+\end{description}
+
+%-----------------------------------------------------------------------------%
+\section{Sistematika Penulisan}
+\label{sec:sistematikaPenulisan}
+%-----------------------------------------------------------------------------%
+Sistematika penulisan laporan adalah sebagai berikut:
+\begin{itemize}
+    \item Bab 1 PENDAHULUAN \\
+    Bab ini membahas latar belakang penelitian, rumusan masalah dan batasan dari penelitian, tujuan penelitian, posisi penelitian dari ketiga penulis, dan sistematika penulisan laporan penelitian.
+    \item Bab 2 STUDI LITERATUR \\
+    Bab ini membahas landasan teori yang berkaitan dengan \f{Green} VRPTW, Model MOVESTAR, Markov Chain, MLOps, serta teknologi IoT yang digunakan dalam penelitian.
+    \item Bab 3 METODOLOGI PENELITIAN \\
+    Bab ini membahas mengenai metodologi yang digunakan untuk pengerjaan penelitian, mulai dari pengumpulan data \f{drive cycle}, pelatihan model, perancangan perangkat IoT, hingga skenario pengujian sistem.
+    \item Bab 4 DESAIN DAN IMPLEMENTASI SISTEM \\
+    Bab ini membahas penjelasan lebih mendalam terkait desain arsitektur MLOps, implementasi model emisi, integrasi dengan sistem \f{legacy} PT XYZ, serta implementasi perangkat keras IoT.
+    \item Bab 5 EVALUASI \\
+    Bab ini membahas evaluasi mengenai akurasi model emisi dibandingkan dengan data sensor, performa sistem \f{routing}, serta kendala dan solusi yang dihadapi selama penelitian.
+    \item Bab 6 KESIMPULAN DAN SARAN \\
+    Bab ini membahas kesimpulan dari penelitian dan saran dari penulis untuk pengembangan penelitian selanjutnya.
+\end{itemize}

@@ -1,0 +1,532 @@
+%-----------------------------------------------------------------------------%
+\chapter{\babDua}
+\label{bab:2}
+%-----------------------------------------------------------------------------%
+
+Pada Bab Studi Literatur akan dijelaskan mengenai landasan teori dan tinjauan pustaka yang menjadi dasar penelitian. Pembahasan mencakup konsep \f{Green Vehicle Routing Problem with Time Windows} (Green VRPTW), model estimasi emisi, teknologi pemrosesan data 3D yang sudah diterapkan pada penelitian sebelumnya, serta arsitektur infrastruktur yang diterapkan.
+
+%-----------------------------------------------------------------------------%
+\section{\f{Green Vehicle Routing Problem with Time Windows} (Green VRPTW)}
+\label{sec:greenVRPTW}
+%-----------------------------------------------------------------------------%
+\f{Green Vehicle Routing Problem with Time Windows} (Green VRPTW) merupakan varian dari \f{Vehicle Routing Problem} (VRP) tradisional yang diperluas untuk mengintegrasikan dua kendala utama, yaitu tujuan lingkungan (\f{Green}-VRP) dan batasan waktu pelayanan (\f{time window}). Menurut Asghari dan Al-e-hashem (2021), \f{Green} VRPTW bertujuan meminimalkan dampak lingkungan dari operasi logistik, seringkali diukur melalui emisi \ce{CO2}, sambil tetap memenuhi kebutuhan pelanggan dalam rentang waktu tertentu.
+
+Dalam konteks perkotaan, penentuan rute yang efisien waktu dan rendah polusi menjadi sangat kompleks. Emisi \ce{CO2} sangat dipengaruhi oleh faktor dinamis seperti kecepatan kendaraan dan kemacetan lalu lintas yang berubah sepanjang waktu (\f{time-dependent}). Palmer (2007) menunjukkan bahwa kecepatan memiliki dampak signifikan terhadap emisi, di mana kemacetan lalu lintas dapat meningkatkan emisi secara drastis. Integrasi \f{time windows} dalam model ini memastikan bahwa upaya pengurangan emisi tidak mengorbankan kualitas layanan, meminimalkan penalti keterlambatan atau kedatangan yang terlalu awal (Mirmohammadi et al., 2017).
+
+%-----------------------------------------------------------------------------%
+\subsection{Pendekatan \f{Routing}}
+\label{sec:pendekatanRouting}
+%-----------------------------------------------------------------------------%
+Berbeda dengan formulasi VRP klasik yang sering menggunakan jarak geometris sederhana, pendekatan \f{routing} dalam \f{Green} VRP membutuhkan data dunia nyata yang spesifik dan akurat. Penelitian oleh de Oliveira da Costa et al. (2018) menekankan penggunaan layanan pemetaan komersial seperti Google Maps API untuk mendapatkan estimasi jarak tempuh dan waktu perjalanan (\f{travel time}) yang realistis.
+
+Pemanfaatan Google Maps API memungkinkan sistem untuk memperhitungkan kondisi kemacetan lalu lintas (\f{traffic congestion}) secara \f{real-time} atau historis. Data waktu tempuh yang akurat sangat krusial untuk memperkirakan kecepatan rata-rata kendaraan (v) di setiap segmen rute. Kecepatan rata-rata ini, yang dihitung sebagai rasio jarak terhadap waktu, merupakan parameter fundamental yang digunakan dalam model emisi untuk menghitung biaya lingkungan dari setiap rute yang mungkin diambil.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Green Cost Matrix} vs. \f{Conventional Cost Matrix}}
+\label{sec:greenVsConventionalCostMatrix}
+%-----------------------------------------------------------------------------%
+Perbedaan mendasar antara \f{Green} VRP dengan VRP konvensional terletak pada konstruksi matriks biaya (\f{cost matrix}) yang digunakan dalam optimasi. Dalam VRP konvensional (\f{capacitated} VRP), tujuan utamanya adalah meminimalkan biaya operasional dan finansial, yang biasanya direpresentasikan secara statis oleh jarak tempuh atau waktu perjalanan.
+
+Sebaliknya, \f{Green Cost Matrix} bertujuan meminimalkan emisi \ce{CO2}. Matriks ini bersifat dinamis dan menggunakan \f{Analytical Emission Models} (EMs) yang memperhitungkan faktor-faktor non-linear (de Oliveira da Costa et al., 2018). Faktor-faktor tersebut meliputi:
+
+\begin{itemize}
+    \item Kecepatan Rata-rata (v) \\
+    Bukan sekadar proksi waktu, melainkan variabel penyesuaian non-linear yang sangat mempengaruhi laju emisi.
+    \item Beban Muatan (\f{Load}) \\
+    Berat total kendaraan mempengaruhi konsumsi bahan bakar, terutama pada kondisi akselerasi atau jalan menanjak.
+    \item Gradien Jalan (g) \\
+    Kemiringan jalan memiliki dampak signifikan terhadap beban mesin dan emisi yang dihasilkan.
+\end{itemize}
+
+Singkatnya, jika matriks biaya konvensional adalah metrik statis, \f{Green Cost Matrix} adalah fungsi \f{fitness} berbasis emisi yang dinamis dan memerlukan data \f{input} yang detail untuk memodelkan biaya lingkungan secara akurat.
+
+%-----------------------------------------------------------------------------%
+\section{Model Estimasi Emisi MOVESTAR}
+\label{sec:movestar}
+%-----------------------------------------------------------------------------%
+MOVESTAR (\f{Motor Vehicle Emission Simulator for Specific Power}) adalah model sumber terbuka yang dikembangkan oleh Wang et al. (2020) untuk menghitung konsumsi bahan bakar dan emisi kendaraan. Model ini merupakan versi ringan (\f{lite version}) dari model MOVES yang dikembangkan oleh U.S. Environmental Protection Agency (USEPA). MOVESTAR dirancang untuk menyederhanakan kompleksitas MOVES tanpa mengorbankan akurasi yang signifikan, memungkinkan integrasi yang mudah dalam simulasi lalu lintas atau perhitungan \f{real-time}.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Vehicle Specific Power} (VSP)}
+\label{sec:vsp}
+%-----------------------------------------------------------------------------%
+Inti dari perhitungan MOVESTAR adalah konsep \f{Vehicle Specific Power} (VSP), yaitu daya spesifik yang dibutuhkan kendaraan per satuan massa untuk mengatasi hambatan gerak (aerodinamis, gesekan ban, inersia, dan gravitasi). VSP dihitung menggunakan persamaan:
+
+\begin{align}
+    \label{equ:vsp}
+    VSP = \frac{A \cdot v + B \cdot v^2 + C \cdot v^3 + M \cdot (a + g \sin\theta) \cdot v}{f}
+\end{align}
+
+Dimana:
+\begin{itemize}
+    \item v: Kecepatan kendaraan (m/s)
+    \item a: Akselerasi kendaraan (m/s\textsuperscript{2})
+    \item A, B, C: Koefisien hambatan jalan (\f{rolling, rotating, drag terms})
+    \item M: Massa kendaraan (ton)
+    \item f: Faktor massa tetap
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Operating Mode} (OpMode) dan Estimasi Emisi}
+\label{sec:opMode}
+%-----------------------------------------------------------------------------%
+Setelah nilai VSP dihitung, MOVESTAR memetakan nilai tersebut ke dalam \f{Operating Mode} (OpMode). OpMode mengklasifikasikan kondisi berkendara ke dalam kategori diskrit (seperti \f{idle}, \f{coasting}, \f{cruising/acceleration}, \f{deceleration}). Setiap OpMode memiliki tingkat emisi dasar (\f{base emission rate}) yang telah ditentukan oleh USEPA MOVES untuk tipe kendaraan tertentu. Dengan memetakan profil kecepatan dan akselerasi (\f{drive cycle}) ke OpMode, MOVESTAR dapat mengestimasi total emisi (\ce{CO2}, CO, HC, \ce{NO_x}) dan konsumsi energi untuk suatu perjalanan.
+
+%-----------------------------------------------------------------------------%
+\section{\f{Machine Learning} untuk \f{Drive Cycle Generation}}
+\label{sec:mlForDriveCycle}
+%-----------------------------------------------------------------------------%
+Estimasi emisi yang akurat membutuhkan \f{input} berupa profil kecepatan yang realistis, atau yang dikenal sebagai \f{drive cycle}. Penelitian ini menggunakan pendekatan berbasis data (\f{data-driven}) untuk membangkitkan siklus berkendara yang representatif.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Operating Mode} (OpMode) dan Estimasi}
+\label{sec:driveCycleDef}
+%-----------------------------------------------------------------------------%
+\f{Drive cycle} didefinisikan sebagai profil kecepatan terhadap waktu (\f{time-speed profile}) yang merepresentasikan pola mengemudi di dunia nyata. Secara global, terdapat berbagai standar siklus yang digunakan untuk pengujian kendaraan, seperti \f{New European Driving Cycle} (NEDC), \f{Federal Test Procedure} (FTP), dan \f{Worldwide Harmonized Light-Duty Test Procedure} (WLTP). Keskin et al. (2023) mencatat bahwa WLTP dikembangkan untuk memberikan estimasi yang lebih dinamis dan realistis dibandingkan pendahulunya.
+
+Namun, siklus standar seringkali tidak memadai untuk merepresentasikan karakteristik lalu lintas lokal yang spesifik, seperti kondisi jalanan di Jakarta yang memiliki tingkat kemacetan dan perilaku berkendara yang unik. Variasi kondisi lalu lintas, jenis jalan, dan skala kota menyebabkan siklus standar menjadi kurang akurat untuk estimasi emisi regional. Oleh karena itu, penelitian ini berfokus pada pembentukan \f{custom real-world cycle} menggunakan metodologi stokastik untuk menghasilkan profil kecepatan yang representatif bagi area operasional PT XYZ.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Markov Chain Model}}
+\label{sec:markovChain}
+%-----------------------------------------------------------------------------%
+Untuk membangkitkan \f{custom drive cycle} tersebut, digunakan model Markov Chain. Teori ini memodelkan perilaku mengemudi sebagai proses stokastik yang memiliki sifat \f{memoryless}, di mana probabilitas keadaan masa depan hanya bergantung pada keadaan saat ini, bukan pada sejarah masa lalu (Keskin et al., 2023). Proses pembentukan siklus menggunakan MCM melibatkan langkah-langkah berikut:
+
+\begin{enumerate}
+    \item Definisi Ruang Keadaan (\f{state space}) \\
+    Keadaan (\f{state}) didefinisikan oleh pasangan karakteristik kecepatan (s) dan percepatan (a). Ruang keadaan dibentuk menggunakan peta kisi (\f{grid map}) dengan interval tertentu (misalnya interval kecepatan 2.5 km/jam dan interval percepatan 0.25 m/s\textsuperscript{2}). Setiap sel dalam kisi ini mewakili satu keadaan unik Xj.
+    
+    \begin{figure}[t!]
+        \centering
+        \includegraphics[width=\textwidth]{assets/pics/visualisasi_grid_state_space.png}
+        \caption{Visualisasi \f{State Space} dengan \f{Grid}}
+        \label{fig:stateSpaceGrid}
+    \end{figure}
+
+    \item Matriks Probabilitas Transisi (\f{transition probability matrix}) \\
+    Perilaku kendaraan dikarakterisasi oleh matriks P, yang berisi probabilitas transisi (pij) dari keadaan xi ke keadaan xj. Nilai ini dihitung dari data historis rute dengan membagi frekuensi transisi yang diamati dengan total transisi.
+
+    \item Prediksi Kecepatan Selanjutnya (\f{next state velocity}) \\
+    MCM digunakan untuk membangkitkan segmen data sintetis. Berdasarkan keadaan saat ini, keadaan selanjutnya dipilih secara acak (stokastik) berdasarkan probabilitas dalam matriks transisi. Setelah keadaan terpilih, nilai kecepatan spesifik di dalam rentang keadaan tersebut dipilih secara acak untuk memperkenalkan variabilitas yang menyerupai perilaku dunia nyata.
+\end{enumerate}
+
+Pendekatan ini memungkinkan sistem untuk memprediksi profil kecepatan kendaraan di sepanjang rute yang direncanakan oleh Google Maps, yang kemudian menjadi \f{input} bagi model emisi MOVESTAR.
+
+%-----------------------------------------------------------------------------%
+\subsection{Model Pembanding}
+\label{sec:modelPembanding}
+%-----------------------------------------------------------------------------%
+Pada bagian ini dibahas berbagai algoritma \f{machine learning} yang digunakan sebagai pembanding untuk mengevaluasi performa model utama dalam memprediksi profil kecepatan dan akselerasi berdasarkan kondisi jalan serta lalu lintas.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Support Vector Regression} (SVR)}
+\label{sec:svr}
+%-----------------------------------------------------------------------------%
+\f{Support Vector Regression} (SVR) adalah adaptasi dari \f{Support Vector Machine} (SVM) untuk kasus regresi. SVR bekerja dengan memetakan data ke dalam ruang fitur berdimensi tinggi menggunakan fungsi pemetaan yang disebut \f{kernel} untuk melakukan regresi linear di dalam ruang tersebut. Beberapa fungsi \f{kernel} yang umum digunakan dalam SVR meliputi Linear, \f{Radial Basis Function} (RBF), dan Polynomial.
+
+Dalam konteks prediksi lalu lintas, SVR terbukti efektif untuk memprediksi kecepatan kendaraan dengan memodelkan data \f{time-series} dari riwayat perjalanan (misalnya data GPS taksi). Penelitian dari prediksi kecepatan yang dilakukan oleh Dwina dan Putri (2017) menunjukkan bahwa SVR memiliki akurasi yang baik dalam memprediksi kecepatan lalu lintas, dibandingkan metode lain seperti \f{Artificial Neural Network} (ANN) dan \f{Exponential Smoothing} dalam klaster jalan tertentu.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Random Forest}}
+\label{sec:randomForest}
+%-----------------------------------------------------------------------------%
+\f{Random Forest} adalah \f{supervised algorithm} yang memanfaatkan \f{ensemble} dari banyak \f{decision tree} CART (\f{Classification and Regression Trees}) yang tidak dipangkas (\f{unpruned}). Algoritma ini menerapkan metode \f{bootstrap resampling} untuk memilih set sampel data yang berbeda untuk membuat setiap pohon keputusan, di mana hasil akhirnya ditentukan melalui mekanisme \f{voting} (untuk klasifikasi) atau rata-rata.
+
+Kelebihan utama \f{Random Forest} adalah karakteristiknya yang \f{robust}, performa tinggi, dan kemampuannya menangani \f{dataset} dengan atribut yang kompleks tanpa perlu menetapkan bobot atribut di awal. Dalam studi prediksi kemacetan lalu lintas menggunakan data kondisi jalan dan cuaca yang dilakukan oleh Yunxiang (2017), \f{Random Forest} menunjukkan akurasi prediksi yang tinggi mencapai 87.5\% dengan \f{generalization error} yang rendah, serta mampu mengidentifikasi faktor lingkungan yang paling penting dalam mempengaruhi kondisi lalu lintas.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{XGBoost}
+\label{sec:xgboost}
+%-----------------------------------------------------------------------------%
+XGBoost adalah implementasi yang sangat efisien dari \f{gradient boosting}, yang membangun \f{ensemble decision tree} secara berurutan (\f{sequentially}) di mana setiap pohon baru bertujuan untuk mengoreksi kesalahan (\f{residuals}) dari pohon sebelumnya. XGBoost dirancang untuk kecepatan dan performa tinggi, terutama dalam menangani \f{dataset} besar dan pola non-linear yang kompleks pada data lalu lintas.
+
+Fitur unggulan XGBoost meliputi \f{regularization} untuk mencegah \f{overfitting}, kemampuan menangani \f{sparsity data}, dan \f{weighted quantile sketch} untuk konstruksi pohon yang akurat. Dalam studi prediksi kecepatan perjalanan yang melibatkan variabel cuaca dan temporal, XGBoost menunjukkan stabilitas yang lebih baik dan \f{error} yang sedikit lebih rendah dibandingkan model lain seperti LightGBM, menjadikannya model yang \f{robust} untuk generalisasi data baru (Rubasinghe \& Hettiarachchi, 2023).
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Decision Tree}}
+\label{sec:decisionTree}
+%-----------------------------------------------------------------------------%
+\f{Decision Tree} adalah metode prediksi yang membagi \f{dataset} menjadi himpunan bagian yang lebih kecil berdasarkan aturan keputusan untuk menentukan target variabel. Dalam konteks prediksi kemacetan lalu lintas, \f{Decision Tree} terbukti memiliki performa yang sangat baik dalam mengklasifikasikan status kemacetan dibandingkan metode lain (Tamir et al., 2020).
+Penelitian Tamir et al. (2020) menunjukkan bahwa \f{Decision Tree} mampu mencapai akurasi hingga 97.65\%, yang mana lebih akurat dibandingkan menggunakan \f{Logistic Regression} dan \f{Neural Networks} dalam memprediksi pola kemacetan berdasarkan data sensor lalu lintas. Keunggulan metode ini terletak pada kemampuannya untuk memproses aturan keputusan yang kompleks dari data historis dengan presisi (\f{precision}) dan \f{recall} yang tinggi.
+
+%-----------------------------------------------------------------------------%
+\subsubsection{\f{Artificial Neural Networks} (ANN)}
+\label{sec:ann}
+%-----------------------------------------------------------------------------%
+\f{Artificial Neural Networks} (ANN) adalah model komputasi yang terinspirasi dari struktur syaraf biologis, terdiri dari \f{input layer}, \f{hidden layer}, dan \f{output layer} untuk memodelkan hubungan non-linear yang kompleks. ANN sering digunakan sebagai standar pembanding dalam prediksi lalu lintas karena kemampuannya menangani banyak parameter \f{input} sekaligus.
+
+Meskipun demikian, dalam beberapa studi perbandingan, performa ANN terkadang berada di bawah metode berbasis pohon. Sebagai contoh, dalam klasifikasi kemacetan, ANN mencatat akurasi sebesar 93.75\%, yang sedikit lebih rendah dibandingkan \f{Decision Tree} (Tamir et al., 2020). Selain itu, penelitian lain mencatat bahwa untuk klaster jalan tertentu, metode seperti SVR memiliki akurasi lebih tinggi dibanding ANN dalam kasus prediksi kecepatan (Dwina \& Putri, 2017).
+
+%-----------------------------------------------------------------------------%
+\section{Arsitektur MLOps}
+\label{sec:mlops}
+%-----------------------------------------------------------------------------%
+Untuk mengelola siklus hidup model \f{machine learning} dan integrasi sistem secara \f{end-to-end}, penelitian ini menerapkan prinsip MLOps (\f{Machine Learning Operations}) dengan memanfaatkan Apache Airflow, MinIO, dan Docker.
+
+%-----------------------------------------------------------------------------%
+\subsection{Apache Airflow}
+\label{sec:airflow}
+%-----------------------------------------------------------------------------%
+Apache Airflow dipilih sebagai \f{workflow orchestration tool} karena kemampuannya dalam menyederhanakan pengelolaan data \f{pipeline} yang kompleks (Shukla, 2022). Dalam Airflow, alur kerja didefinisikan sebagai \f{Directed Acyclic Graphs} (DAGs) menggunakan bahasa Python, yang memungkinkan fleksibilitas tinggi dan integrasi mudah dengan berbagai layanan \f{cloud} maupun \f{on-premise}. Airflow menyediakan fitur \f{monitoring} yang kuat melalui antarmuka pengguna (UI) yang intuitif, memungkinkan pelacakan status eksekusi \f{task}, \f{debugging} kegagalan, dan penjadwalan otomatis (\f{scheduling}) untuk proses inferensi model emisi secara berkala atau berbasis \f{trigger}.
+
+%-----------------------------------------------------------------------------%
+\subsection{MinIO (\f{Object Storage})}
+\label{sec:minio}
+%-----------------------------------------------------------------------------%
+MinIO digunakan sebagai solusi penyimpanan data tak terstruktur (\f{Object Storage}) yang kompatibel dengan Amazon S3. Adegbuyi (2023) menjelaskan bahwa \f{Object Storage} memiliki keunggulan signifikan dibandingkan \f{Block Storage} tradisional dalam hal skalabilitas dan pengelolaan metadata. MinIO memungkinkan penyimpanan data hasil inferensi, model ML, dan \f{log} sensor dalam jumlah besar dengan struktur datar (\f{flat structure}) yang mudah diakses melalui API. Hal ini memfasilitasi integrasi antara komponen sistem yang berbeda (Django \f{backend} dan Airflow \f{worker}) tanpa ketergantungan pada sistem \f{file} lokal yang kaku.
+
+%-----------------------------------------------------------------------------%
+\subsection{Docker}
+\label{sec:docker}
+%-----------------------------------------------------------------------------%
+Docker digunakan untuk membungkus (\f{containerize}) seluruh komponen sistem, termasuk lingkungan \f{machine learning}, Airflow, dan MinIO. Openja et al. (2022) menyoroti bahwa Docker menjamin portabilitas dan konsistensi lingkungan eksekusi (\f{environment consistency}). Dengan Docker, dependensi perangkat lunak, \f{library} Python, dan konfigurasi sistem dibungkus dalam satu unit yang dapat dijalankan secara identik di berbagai lingkungan, mulai dari laptop pengembangan hingga server produksi dengan GPU. Hal ini sangat krusial dalam MLOps untuk mencegah masalah "\f{it works on my machine}" dan mempermudah proses \f{deployment} serta penskalaan sistem.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Framework} Pengembang (\f{Backend} \& \f{Frontend})}
+\label{sec:framework}
+%-----------------------------------------------------------------------------%
+Sistem ini menggunakan kembali \f{stack} teknologi yang telah teruji pada penelitian sebelumnya:
+\begin{itemize}
+    \item Express.js \& Django, digunakan sebagai API Gateway dan layanan pemrosesan logika bisnis. Django khususnya digunakan untuk menangani orkestrasi tugas ke Airflow.
+    \item PostgreSQL, merupakan sistem manajemen basis data relasional untuk menyimpan data transaksional logistik.
+    \item RabbitMQ, merupakan \f{message broker} untuk menangani komunikasi asinkron antar layanan.
+    \item React.js \& Three.js, digunakan pada sisi \f{frontend} untuk antarmuka pengguna dan visualisasi 3D.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\section{Optimasi Pemuatan Barang}
+\label{sec:optimasiPemuatan}
+%-----------------------------------------------------------------------------%
+Karena penelitian ini dibangun di atas infrastruktur logistik yang sudah ada, sistem ini tetap mempertahankan modul optimasi pemuatan barang yang dikembangkan pada penelitian sebelumnya (Abdillah et al., 2025).
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Bin Packing Problem} (BPP)}
+\label{sec:bpp}
+%-----------------------------------------------------------------------------%
+Permasalahan penyusunan barang dalam kendaraan dimodelkan sebagai \f{Three-Dimensional Bin Packing Problem} (3D-BPP). Tujuannya adalah menempatkan sejumlah barang (boks) berbentuk balok ke dalam wadah (truk/motor) dengan meminimalkan ruang kosong dan jumlah kendaraan yang dibutuhkan (Martello et al., 2000).
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Biased Random-Key Genetic Algorithm} (BRKGA)}
+\label{sec:brkga}
+%-----------------------------------------------------------------------------%
+Untuk menyelesaikan BPP, digunakan algoritma metaheuristik BRKGA. Gonçalves dan Resende (2013) menjelaskan bahwa BRKGA merepresentasikan solusi dalam bentuk kromosom kunci acak (\f{random keys}) yang kemudian diterjemahkan menjadi urutan dan orientasi penempatan barang. Pendekatan ini efektif untuk masalah optimasi kombinatorial yang kompleks seperti penataan kargo logistik.
+
+%-----------------------------------------------------------------------------%
+\section{Pemrosesan Data 3D dan LiDAR}
+\label{sec:lidar3d}
+%-----------------------------------------------------------------------------%
+Sistem ini menggunakan kembali teknologi pemindaian dan pemrosesan dimensi barang yang dikembangkan pada penelitian O'Vara dan Mahaarta (2023) serta Abdillah et al. (2025) sebagai \f{input} data logistik.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Light Detection and Ranging} (LiDAR)}
+\label{sec:lidar}
+%-----------------------------------------------------------------------------%
+LiDAR adalah teknologi penginderaan jauh yang menggunakan pulsa cahaya untuk mengukur jarak dan memetakan lingkungan dalam bentuk tiga dimensi. Dalam konteks sistem ini, sensor LiDAR pada perangkat \f{mobile} digunakan untuk memindai dimensi fisik paket secara cepat dan akurat (Duraisamy et al., 2024), menggantikan pengukuran manual.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Point Cloud} dan Segmentasi}
+\label{sec:pointcloud}
+%-----------------------------------------------------------------------------%
+Data hasil pemindaian LiDAR direpresentasikan sebagai \f{point cloud}, yaitu kumpulan titik koordinat 3D yang mewakili permukaan objek. Untuk memisahkan objek paket dari latar belakang (seperti lantai), digunakan model \f{Deep Learning Point Transformer} v3 (PTv3). Wu et al. (2024) merancang PTv3 untuk memproses data \f{point cloud} berskala besar dengan efisiensi komputasi tinggi melalui teknik \f{serialization}, memungkinkan segmentasi objek yang presisi.
+
+%-----------------------------------------------------------------------------%
+\subsection{Estimasi Geometri (AABB, DBSCAN, PCA)}
+\label{sec:estimasiGeometri}
+%-----------------------------------------------------------------------------%
+Setelah objek tersegmentasi, dimensi fisik dihitung menggunakan metode komputasi geometri:
+\begin{itemize}
+    \item \f{Statistical Outlier Removal}, untuk membersihkan \f{noise} atau titik data yang menyimpang dari kumpulan utama.
+    \item \f{Density-Based Spatial Clustering of Application with Noise} (DBSCAN), yaitu algoritma klastering berbasis kepadatan untuk mengelompokkan titik-titik objek utama dan membuang artefak yang tidak relevan.
+    \item \f{Principal Component Analysis} (PCA), digunakan untuk meluruskan orientasi objek agar sejajar dengan sumbu koordinat.
+    \item \f{Axis-Aligned Bounding Box} (AABB), yaitu metode untuk membuat kotak pembatas yang sejajar dengan sumbu koordinat guna menghitung panjang, lebar, dan tinggi paket secara efisien (Schneider \& Eberly, 2002).
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\section{Pencemaran Udara dan Standar Emisi}
+\label{sec:pencemaranUdara}
+%-----------------------------------------------------------------------------%
+Pada bagian ini berisikan uraian landasan teori mengenai pencemaran udara yang dihasilkan oleh sektor transportasi mengingat kontribusi yang cukup signifikan pada sektor transportasi darat terhadap degradasi kualitas udara. Pemahaman mengenai urgensi mitigasi dampak lingkungan, karakteristik zat kimia dari gas-gas emisi sesuai dengan regulasi (seperti \ce{CO2}, CO, dan HC), serta kerangka regulasi baku mutu yang menjadi acuan standar kepatuhan dalam pengembangan sistem validasi emisi ini.
+
+%-----------------------------------------------------------------------------%
+\subsection{Definisi dan Dampak}
+\label{sec:definisiDampak}
+%-----------------------------------------------------------------------------%
+Pencemaran udara terjadi ketika zat partikulat, biologis, dan kimia bercampur dengan atmosfer. Zat-zat tersebut menyebabkan kerugian bagi lingkungan. Dalam konteks transportasi darat, emisi gas buang merupakan sisa-sisa pembuangan gas dari proses pembakaran bahan bakar fosil pada kendaraan bermesin pembakaran dalam (\f{Internal Combustion Engine}). Dalam konteks tersebut, sektor logistik menyumbang sekitar 14\% dari total emisi karbon di dunia (Huang et al., 2020). Hal tersebut yang menjadi motivasi utama dalam menjadikannya target untuk strategi mitigasi berbasis teknologi. Dampak dari pencemaran udara dapat dikategorikan dalam tiga variabel yang saling berkaitan, antara lain:
+
+\begin{itemize}
+    \item Dampak Fisiologis dan Kesehatan Masyarakat. \\
+    Polutan primer seperti Karbon Monoksida (CO), Nitrogen Oksida (\ce{NO_x}), dan Hidrokarbon (HC) memiliki jalur toksikologi yang berbeda. CO, misalnya, adalah asfiksian sistemik yang mengikat hemoglobin dalam darah dengan afinitas 200-250 kali lebih kuat daripada oksigen, membentuk karboksihemoglobin yang menghambat transportasi oksigen ke jaringan tubuh. Paparan jangka panjang terhadap \ce{NO_x} dan materi partikulat berkorelasi kuat dengan insiden penyakit pernapasan kronis, penurunan fungsi paru-paru, dan gangguan kardiovaskular.
+    \item Dampak Lingkungan dan Iklim. Karbon Dioksida (\ce{CO2}) \\
+    Meskipun tidak beracun secara langsung pada konsentrasi ambien, adalah gas rumah kaca (GRK) utama yang memicu pemanasan global. Karakteristik \ce{CO2} yang bersifat \f{irreversible} dalam jangka pendek berarti dampak akumulatifnya, seperti kenaikan muka air laut dan anomali cuaca ekstrem, dapat bertahan hingga 1.000 tahun setelah emisi dihentikan. Selain itu, interaksi antara \ce{NO_x} dan Senyawa Organik Volatil (VOC) di bawah sinar matahari memicu pembentukan ozon troposfer (\ce{O3}) dan \f{smog} fotokimia yang merusak vegetasi dan menurunkan hasil pertanian.
+    \item Dampak Ekonomi \\
+    Inefisiensi dalam proses logistik dan transportasi tidak hanya meningkatkan biaya operasional akibat konsumsi bahan bakar yang boros, tetapi juga membebani sistem kesehatan publik dan menurunkan produktivitas ekonomi akibat morbiditas terkait polusi.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{Baku Mutu Emisi}
+\label{sec:bakuMutuEmisi}
+%-----------------------------------------------------------------------------%
+Baku mutu emisi sumber bergerak adalah batas maksimum zat polutan yang diperbolehkan keluar dari knalpot kendaraan. Regulasi ini terus berevolusi menjadi lebih ketat seiring waktu baik itu bagi kendaraan berbahan bakar bensin maupun solar. Pada Peraturan Menteri Negara Lingkungan Hidup Nomor 05 Tahun 2006 tentang Ambang Batas Emisi Gas Buang Kendaraan Bermotor Lama mencantumkan zat-zat yang sah sebagai dan diatur regulasinya di Indonesia, antara lain adalah Karbon Dioksida (\ce{CO2}), Karbon Monoksida (CO), dan senyawa Hidrokarbon (HC). Hal tersebut juga sesuai dengan regulasi Euro 6 dan regulasi yang ditetapkan oleh US EPA mengenai standar regulasi zat-zat emisi gas buang. Meskipun begitu karena faktor sosial-politik, pada penelitian kali ini akan digunakan regulasi di Indonesia menurut Peraturan Menteri Lingkungan Hidup dan Kehutanan Republik Indonesia Nomor 8 Tahun 2023 tentang Penerapan Baku Mutu Emisi Kendaraan Bermotor Kategori M, Kategori N, Kategori O, dan Kategori L. Mengingat, kendaraan-kendaraan yang digunakan pada sektor logistik termasuk ke dalam kategori N dan O secara berturut-turut.
+
+Pada Peraturan Menteri Lingkungan Hidup dan Kehutanan Republik Indonesia Nomor 8 Tahun 2023 pasal 11 ayat (2) huruf c, dikatakan bahwa alat uji emisi gas buang kendaraan harus memiliki kemampuan untuk mengukur kadar karbon monoksida (CO) dengan rentang pengukuran 0,00 (nol koma nol nol) sampai dengan 9,99 (sembilan koma sembilan sembilan) persen volume karbon monoksida (CO) dengan ketelitian paling besar 0,01 (nol koma nol satu) persen volume karbon monoksida (CO). Serta harus dapat mengukur kadar hidrokarbon (HC) dengan rentang parameter pengukuran 0 (nol) sampai dengan 9.999 (sembilan ribu sembilan ratus sembilan puluh sembilan) \f{part per million} (ppm) volume hidrokarbon (HC) dengan ketelitian paling besar satu \f{part per million} (ppm) volume hidrokarbon (HC).
+
+%-----------------------------------------------------------------------------%
+\subsection{Karakteristik Gas Emisi}
+\label{sec:karakteristikGasEmisi}
+%-----------------------------------------------------------------------------%
+Dari setiap gas emisi yang diatur keberadaannya sesuai dengan regulasi pemerintah yang berlaku, masing-masing memiliki karakteristik fisikokimia unik.
+
+Pertama, Karbon Dioksida (\ce{CO2}). Sebagai produk utama pembakaran sempurna hidrokarbon, konsentrasi \ce{CO2} berbanding lurus dengan konsumsi bahan bakar. Secara kimia, reaksi pembakaran ideal bensin ($C_8H_{18}$) dapat dituliskan sebagai:
+
+\begin{align}
+    \label{equ:pembakaranBensin}
+    2C_{8}H_{18} + 25O_{2} \rightarrow 16CO_{2} + 18H_{2}O + Energi
+\end{align}
+
+Dalam praktik nyata, rasio stoikiometri jarang tercapai sempurna, namun \ce{CO2} tetap menjadi indikator dominan jejak karbon. Faktor emisi untuk bensin adalah sekitar 2.34 kg \ce{CO2}/liter, sedangkan diesel menghasilkan sekitar 2.68 kg \ce{CO2}/liter, mencerminkan densitas karbon yang lebih tinggi pada bahan bakar diesel. Deteksi \ce{CO2} paling efektif menggunakan sensor optik karena sifat molekulnya yang menyerap radiasi inframerah pada panjang gelombang spesifik.
+
+Kedua, Karbon Monoksida (CO). CO terbentuk akibat oksidasi parsial karbon saat suplai oksigen tidak mencukupi atau waktu tinggal dalam ruang bakar terlalu singkat. Emisi CO cenderung tinggi pada kondisi \f{idling} atau beban mesin rendah dimana rasio udara-bahan bakar kaya (\f{rich mixture}). Namun, studi \f{Real Driving Emission} (RDE) menunjukkan bahwa emisi CO juga dipengaruhi secara signifikan oleh \f{Vehicle Specific Power} (VSP), yaitu daya spesifik kendaraan per satuan massa, yang fluktuatif selama akselerasi mendadak.
+
+Ketiga, Hidrokarbon (HC). Hidrokarbon dalam gas buang merepresentasikan bahan bakar yang tidak terbakar (\f{unburned fuel}) atau produk pirolisis parsial. Senyawa ini terdiri dari rantai alkana, alkena, dan aromatik yang kompleks. Keberadaan HC seringkali berkaitan dengan masalah pada sistem pengapian atau kompresi mesin yang buruk. Sensor tipe \f{Metal Oxide Semiconductor} (MOS) seperti MQ-2 efektif mendeteksi spektrum luas HC karena reaktivitas permukaannya terhadap gas pereduksi.
+
+%-----------------------------------------------------------------------------%
+\section{\f{Internet of Things} (IoT)}
+\label{sec:iot}
+%-----------------------------------------------------------------------------%
+Pemanfaatan \f{Internet of Things} (IoT) dilakukan agar dapat melakukan pengambilan sampel kualitas emisi gas buang kendaraan bermotor secara \f{real-time}.
+
+%-----------------------------------------------------------------------------%
+\subsection{Konsep Dasar IoT}
+\label{sec:konsepIot}
+%-----------------------------------------------------------------------------%
+Dalam penelitian ini, sistem IoT digunakan untuk mengimplementasi sistem penginderaan menggunakan sensor untuk mengukur konsentrasi gas \ce{CO2}, CO, dan HC secara kontinu yang diletakkan di sekitar saluran pembuangan hasil pembakaran pada kendaraan bermotor. Kemudian dari pembacaan tersebut, dilakukan pemrosesan data mentah hasil pembacaannya agar dapat sesuai. Data yang sudah didapat dan diproses kemudian akan disimpan ke dalam SD Card melalui sistem \f{Data Logger} kemudian secara manual akan dimasukkan ke dalam model \f{machine learning} untuk memprediksi emisi gas buang kendaraan berdasarkan rute dan perilaku pengemudi.
+
+%-----------------------------------------------------------------------------%
+\subsection{Arsitektur Perangkat Keras IoT}
+\label{sec:arsitekturIoT}
+%-----------------------------------------------------------------------------%
+Sistem tertanam pada IoT dirancang dengan batasan sumber daya yang ketat. Arsitektur perangkat keras yang digunakan juga dirancang secara berlapis.
+
+Pada \f{physical layer}, sistem IoT melibatkan antarmuka listrik langsung dengan sensor melalui ADC, I2C, dan UART. Tantangan utama dalam mengimplementasi \f{layer} ini adalah upaya untuk memenuhi kebutuhan akan kelistrikan sesuai dengan yang dibutuhkan oleh masing-masing modul yang diimplementasi pada rangkaian sistem beserta spesifikasinya. Selain itu, pengalokasian \f{address} juga menjadi salah satu tantangan yang dihadapi dalam rangka mengimplementasi sistem dengan modul dan arsitektur yang kompleks.
+
+Pada \f{firmware layer}, sistem IoT menggunakan arsitektur \f{super-loop} sebagai sistem \f{task scheduling}. Tantangan utama dalam mengimplementasi \f{layer} ini adalah upaya agar bisa menjalankan seluruh \f{task} dengan interval deterministik setiap detiknya untuk menjaga akurasi integrasi data seiring waktu.
+
+Pada \f{application layer}, sistem IoT menjalankan logika bisnis seperti konversi nilai sensor ke ppm dan enkapsulasi data ke format .csv yang kemudian disimpan ke dalam SD Card melalui sistem \f{Data Logger}.
+
+%-----------------------------------------------------------------------------%
+\section{Mikrokontroler}
+\label{sec:mikrokontroler}
+%-----------------------------------------------------------------------------%
+
+Mikrokontroler merupakan modul utama yang di dalamnya terdapat komponen \f{Core Processing Unit} (CPU) dan komponen-komponen pendukungnya dan memiliki tanggung jawab utama sebagai eksekutor dari algoritma yang kompleks pada sistem IoT.
+
+%-----------------------------------------------------------------------------%
+\subsection{Analisis Komparatif Pemilihan Mikrokontroler}
+\label{sec:komparasiMikrokontroler}
+%-----------------------------------------------------------------------------%
+Dalam rangka menentukan mikrokontroler yang cocok untuk mengembangkan \textit{prototype} pada penelitian ini, dilakukan pendekatan komparatif antara model-model yang menjadi opsi seperti model berbasis UNO R4 WiFi, UNO R3, MEGA 2560, dan ESP32 berdasarkan aspek arsitektur pemrosesan, efisiensi daya, dan kompatibilitas perangkat keras.
+
+\begin{itemize}
+    \item UNO R4 WiFi dan UNO R3 \\
+    Perbandingan pertama antara UNO R4 WiFi dengan pendahulunya, UNO R3, yang memiliki \textit{form factor} identik. UNO R4 WiFi yang menggunakan prosesor Renesas RA4M1 yang berarsitektur ARM Cortex-M4 32-bit memiliki peningkatan yang signifikan dari UNO R3 yang masih menggunakan prosesor berbasis AVR ATMega328P 8-bit. Karenanya, UNO R4 WiFi memiliki kemampuan untuk melakukan operasi yang lebih kompleks dibanding UNO R3. Salah satu poin lain yang signifikan ada pada \textit{clock speed} kedua prosesor tersebut di mana Renesas RA4M1 beroperasi dengan \textit{clock speed} 48MHz dibandingkan ATMega328P yang hanya beroperasi dengan \textit{clock speed} 16MHz.
+
+    \begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/fisikR3R4.jpg}
+    \caption{Tampilan Fisik UNO R4 WiFi (atas) dan UNO R3 (bawah)}
+    \label{fig:fisikR3R4}
+    \end{figure}
+
+    \item UNO R4 WiFi dan MEGA 2560 \\
+    Perbandingan selanjutnya dilakukan dengan membandingkan UNO R4 WiFi dengan satu \textit{platform} yang juga dikembangkan oleh Arduino dan terkenal dengan kompatibilitasnya yang lebih baik dalam mendukung pengembangan proyek IoT yang lebih kompleks, yaitu MEGA 2560. MEGA 2560 memiliki empat \textit{port Hardware Serial} (UART) yang lebih dapat memadai kebutuhan akan komunikasi simultan dengan banyak modul sekaligus. Namun, MEGA 2560 masih menggunakan prosesor dengan basis AVR ATMega2560 yang beroperasi pada \textit{clock speed} lebih rendah dari Renesas RA4M1. Prosesor MEGA 2560 yang berbasis 8-bit juga tidak bisa menjalankan operasi sekompleks yang bisa dijalankan oleh prosesor UNO R4 WiFi yang berbasis 32-bit. Pertimbangan lain yang menjadi poin pendukung tidak dipilihnya MEGA 2560 ada pada dimensinya yang masif sehingga membutuhkan \textit{enclosure} yang lebih besar. Hal ini berlawanan dengan konsep \textit{mobility} dari sistem yang dikembangkan. Atas pertimbangan fisik dan performa tersebut, UNO R4 WiFi dinilai memiliki kelebihan yang signifikan dibanding MEGA 2560.
+
+    \begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/mega2560.jpg}
+    \caption{Tampilan Fisik Arduino MEGA 2560}
+    \label{fig:fisikMega2560}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi Arduino (\textit{https://store.arduino.cc/products/arduino-mega-2560-rev3?srsltid=AfmBOopt-fpfJKgiYXcdKfKA4tPh_ZRxu6zLXn_eFji5tsA0Sc7sDnPf})}
+    \end{figure}
+
+    \item UNO R4 WiFi dan ESP32 \\
+    Perbandingan terakhir dilakukan terhadap ESP32 yang secara teknis memiliki spesifikasi lebih tinggi daripada UNO R4 WiFi dengan arsitektur \textit{dual-core} pada prosesor yang digunakannya, Xtensa LX6, yang bisa beroperasi pada \textit{clock speed} hingga 240MHz. Meskipun begitu, UNO R4 WiFi memiliki keunggulan pada aspek reliabilitas tegangan dan kemudahan integrasi modul-modul yang diperlukan.
+
+    UNO R4 WiFi memiliki \textit{voltage regulator} terintegrasi yang dapat mengatur tegangan daya yang dapat mengkonversi daya yang masuk ke sistem yang dikembangkan dari sistem catu daya untuk dialurkan ke modul dan sensor yang terintegrasi menjadi 3.3V dan 5V sesuai dengan kebutuhannya tanpa adanya sistem pengaturan daya secara terpisah. Berbeda dengan ESP32 yang hanya bisa menyuplai dan beroperasi pada daya sebesar 3.3V saja, dan di atas itu diperlukan sistem pengaturan kelistrikan yang kompleks sehingga hanya dalam rangka penyaluran daya pun memerlukan kompleksitas regulasi yang lebih tinggi. 
+
+    \begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/esp32.jpg}
+    \caption{Tampilan Fisik ESP32}
+    \label{fig:fisikEsp32}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi Espressif (\textit{https://www.espressif.com/en/products/devkits})}
+    \end{figure}
+
+    Selain itu, UNO R4 WiFi memiliki toleransi tegangan input dengan rentang yang lebih luas melalui \textit{port} \textit{V}in yaitu antara 6V hingga 24V menggunakan arus DC. Jauh lebih tinggi dibandingkan batas yang dimiliki ESP32 yang secara \textit{native} terbatas di 3.3V. Atas kemampuan tersebut, UNO R4 WiFi dapat memberikan kompatibilitas dan keamanan yang lebih tinggi terhadap risiko fluktuasi daya.
+\end{itemize}
+
+%-----------------------------------------------------------------------------%
+\subsection{NoLogo Tech UNO R4 WiFi}
+\label{sec:spesifikasiUno}
+%-----------------------------------------------------------------------------%
+NoLogo Tech UNO R4 WiFi dipilih sebagai mikrokontroler utama pada penelitian ini dan mikrokontroler tersebut merupakan \f{clone} dari sebuah model sistem \f{open-source} Arduino UNO R4 WiFi. Meskipun begitu, tidak ada pengubahan spesifikasi utama antara arsitektur milik Arduino dengan apa yang dibuat oleh NoLogo Tech. Hanya saja, NoLogo Tech lebih banyak tersedia di \f{marketplace} di Indonesia dengan harga yang lebih terjangkau ketimbang mikrokontroler yang terdapat logo Arduino di dalamnya.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/diagram_UNO_R4_Wifi_NOLOGOTech.jpg}
+    \caption{Visualisasi Arsitektur NoLogo Tech UNO R4 WiFi}
+    \label{fig:arsitekturR4}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi NoLogo Tech (https://www.nologo.tech/en/product/arduino/ArduinoUnoR4WIFI.html)}
+\end{figure}
+
+NoLogo Tech UNO R4 WiFi menggunakan prosesor Renesas RA4M1 yang merupakan prosesor dengan arsitektur ARM \f{single-core} dengan \f{clock speed} hingga 48 MHz. Selain itu, UNO R4 WiFi juga memiliki prosesor kedua berupa ESP32-S3-MINI-1-N8. Meskipun kegunaannya hanya untuk mengkoneksikan sistem IoT ke WiFi serta Bluetooth dan tidak bisa digunakan untuk membantu menjalankan logika kontrol utama dari IoT.
+
+NoLogo Tech UNO R4 WiFi dilengkapi dengan 256kB Flash dan 32kB RAM. Kapasitas memori ini sangat vital untuk mengimplementasi \f{buffer} data yang besar dalam menjalankan logika kontrol utama dari sistem IoT.
+
+Selain itu, NoLogo Tech UNO R4 WiFi juga dilengkapi dengan ADC (\f{Analog-to-Digital Converter}) 12-bit terintegrasi dengan 6 pin, 14 pin Digital I/O, serta memiliki \f{interface} seperti UART, I2C, SPI, dan CAN yang krusial dalam mengintegrasi seluruh sensor dan modul pada sistem IoT.
+
+%-----------------------------------------------------------------------------%
+\section{Teknologi Sensor Gas}
+\label{sec:teknologiSensorGas}
+%-----------------------------------------------------------------------------%
+Akurasi data emisi sangat bergantung pada pemilihan teknologi sensor yang tepat. Setiap jenis sensor memiliki prinsip transduksi yang berbeda dengan kelebihan dan keterbatasan spesifik terhadap gas target.
+
+%-----------------------------------------------------------------------------%
+\subsection{Sensor Hidrokarbon (MQ-2)}
+\label{sec:sensorHC}
+%-----------------------------------------------------------------------------%
+Sensor MQ-2 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi dengan cara memanfaatkan proses perubahan konduktivitas listrik pada material semikonduktor timah oksida (\ce{SnO2}) yang dipicu oleh reaksi reduksi-oksidasi (redoks) antara gas target dengan oksigen yang berkenaan dengan permukaan elemen pemanas pada sensor untuk dapat mendeteksi gas Hidrokarbon (HC) yang tidak terbakar secara sempurna dalam proses kombusi di dalam mesin dan sensitif akan gas hidrokarbon seperti metana, propana, dan n-butana dengan sensitivitas 300 hingga 10.000 ppm pada setiap volumenya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -20$^{\circ}$C hingga 50$^{\circ}$C sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin yang mengeluarkan uap panas.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotMQ2.jpg}
+    \caption{Tampilan Fisik Sensor DFRobot MQ-2}
+    \label{fig:dfrobotMQ2}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi DFRobot (https://wiki.dfrobot.com/Analog_Gas_Sensor_SKU_SEN0127)}
+\end{figure}
+
+%-----------------------------------------------------------------------------%
+\subsection{Sensor Karbon Monoksida (MQ-7)}
+\label{sec:sensorCO}
+%-----------------------------------------------------------------------------%
+Sensor MQ-7 merupakan sebuah sensor dengan mekanisme elektrokimia yang berfungsi dengan cara memanfaatkan proses perubahan konduktivitas listrik pada material semikonduktor timah oksida (\ce{SnO2}) yang dipicu oleh reaksi reduksi-oksidasi (redoks) antara gas target dengan oksigen yang berkenaan dengan permukaan elemen pemanas pada sensor untuk dapat mendeteksi gas Karbon Monoksida (CO) yang dihasilkan dari pembakaran yang tidak sempurna dalam proses kombusi di dalam mesin dan sensitif akan gas karbon monoksida dengan sensitivitas 20 hingga 2.000 ppm pada setiap volume-nya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -20$^{\circ}$C hingga 50$^{\circ}$C sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin yang mengeluarkan uap panas.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotMQ7.jpg}
+    \caption{Tampilan Fisik Sensor DFRobot MQ-7}
+    \label{fig:dfrobotMQ7}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi DFRobot (https://www.dfrobot.com/product-686.html)}
+\end{figure}
+
+%-----------------------------------------------------------------------------%
+\subsection{Sensor Karbon Dioksida (NDIR \ce{CO2} Sensor)}
+\label{sec:sensorCO2}
+%-----------------------------------------------------------------------------%
+Sensor Karbon Dioksida yang digunakan merupakan sebuah sensor dengan mekanisme optik \f{Non-Dispersive Infrared} (NDIR) yang berfungsi dengan cara memanfaatkan prinsip penyerapan gelombang cahaya inframerah pada panjang gelombang spesifik oleh molekul gas untuk dapat mendeteksi gas Karbon Dioksida (\ce{CO2}) yang merupakan produk utama dari proses pembakaran sempurna di dalam mesin dan memiliki selektivitas tinggi terhadap gas karbon dioksida dengan rentang deteksi 0 hingga 50.000 ppm pada setiap volume-nya. Sensor ini tetap dapat beroperasi pada rentang suhu lingkungan -10$^{\circ}$C hingga 50$^{\circ}$C serta memiliki ketahanan terhadap interferensi uap air, sehingga menjadikannya sangat relevan untuk digunakan dekat saluran gas pembuangan hasil pembakaran kendaraan bermesin.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/dfrobotCO2.png}
+    \caption{Tampilan Fisik Sensor DFRobot NIDR \ce{CO2} Sensor}
+    \label{fig:dfrobotCO2}
+    \vspace{-0.3cm}
+    \footnotesize{Sumber: Dokumentasi DFRobot (https://wiki.dfrobot.com/Infrared_CO2_Sensor_0-50000ppm_SKU__SEN0220)}
+\end{figure}
+
+%-----------------------------------------------------------------------------%
+\section{Penyimpanan Data}
+\label{sec:penyimpananData}
+%-----------------------------------------------------------------------------%
+Manajemen data pada sisi perangkat (\f{edge}) adalah lapisan pertahanan terakhir terhadap kehilangan data (\f{data loss}) yang sering terjadi pada aplikasi bergerak. Pada penelitian kali ini, sistem manajemen penyimpanan data digunakan juga untuk mentransfer data untuk digunakan oleh sistem \f{machine learning}.
+
+%-----------------------------------------------------------------------------%
+\subsection{Pencatatan Data (\f{Data Logging})}
+\label{sec:dataLogging}
+%-----------------------------------------------------------------------------%
+Pencatatan data lokal berfungsi sebagai \f{blackbox} digital dengan menggunakan penyimpanan \f{non-volatile} seperti seperti SD Card atau chip SPI Flash untuk menyimpan data riwayat pembacaan dari sensor emisi. Di dalamnya terdapat \f{file} dengan format .csv yang mencakup \f{timestamp}, nilai sensor \ce{CO2}, nilai sensor CO, dan nilai sensor HC.
+
+SD Card yang digunakan berjenis SDHC dengan kapasitas 32GB sehingga memungkinkan penyimpanan data beresolusi tinggi selama berbulan-bulan tanpa memerlukan \f{overwrite} sehingga memberikan kemungkinan untuk melakukan redundansi penuh dalam proses penyimpanan data.
+
+%-----------------------------------------------------------------------------%
+\subsection{\f{Real-Time Clock} (RTC)}
+\label{sec:rtc}
+%-----------------------------------------------------------------------------%
+Dalam rangka memberikan riwayat pencatatan data yang runtut secara kronologis, diperlukan sebuah sistem yang bisa menjaga konsistensi perhitungan waktu akan kegiatan sistem IoT. Karenanya, digunakan modul RTC DS1307. Dipilihnya modul RTC DS1307 ini memberikan kemampuan sistem IoT untuk tetap menyimpan waktu bahkan ketika perangkat sedang kehilangan daya utama atau koneksi internet. Tanpa RTC yang akurat, data yang akan disimpan akan kekurangan konteks temporal sehingga membuatnya tidak berguna untuk analisis berbasis waktu.
+
+%-----------------------------------------------------------------------------%
+\section{Metode Pengambilan Sampel Udara Gas Buang} 
+\label{sec:metodeSampel}
+%-----------------------------------------------------------------------------%
+Sistem IoT akan dipasangkan dekat dengan saluran gas buang utama kendaraan. Teknik pengambilan data ini menggunakan konsep \f{random sampling} di mana sistem IoT memanfaatkan mekanisme kipas untuk mengambil kondisi atmosfer di sekitar saluran pembuangan kendaraan. Kipas yang digunakan berukuran 4 cm * 4 cm * 1 cm dan beroperasi dengan kelistrikan 12 V DC dan memiliki kecepatan maksimal di 6450 RPM (\f{rotation per minute}) secara konstan tanpa adanya kemungkinan untuk mengubah variabel konstanta tersebut secara manual.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{assets/pics/jarakKipas.jpg}
+    \caption{Posisi Penempatan Kipas dari Sistem IoT Terhadap Saluran Pembuangan Hasil Pembakaran}
+    \label{fig:jarakKipas}
+\end{figure}
+
+Penempatan sistem IoT ditempatkan berjarak 15 cm dari saluran pembuangan hasil pembakaran kendaraan sepeda motor yang digunakan sebagai objek penelitian. arak pada sistem IoT tersebut ditentukan dengan mempertimbangkan kemampuan sistem IoT dalam mengambil \textit{sample} gas buang bahkan terhadap sepeda motor dalam keadaan \textit{idle} yang memiliki debit gas buang yang rendah. Karena sistem IoT ditempatkan berjarak dari saluran pembuangan hasil pembakaran kendaraan, suhu panas dari kendaraan tidak akan memengaruhi integritas struktural sistem IoT karena besarannya yang masih dapat ditolerir oleh sistem IoT sehingga tidak bersifat destruktif.
+
+Tantangan utama dalam pengukuran emisi menggunakan sensor gas portabel adalah mengonversi data konsentrasi (ppm) menjadi satuan total massa emisi (gram). Untuk melakukan hal tersebut, diperlukan variabel laju aliran volumetrik (\f{volume flow rate}) yang diketahui. Penelitian ini menerapkan mekanisme \f{constant volume sampling}menggunakan \f{blower} yang beroperasi pada kecepatan rotasi tetap.
+
+%-----------------------------------------------------------------------------%
+\subsection{Prinsip Laju Aliran Udara Konstan (\f{Fan Affinity Laws})}
+\label{sec:fanAffinityLaws}
+%-----------------------------------------------------------------------------%
+Validitas asumsi bahwa "kecepatan putar konstan menghasilkan laju aliran konstan" didasarkan pada Hukum Afinitas Kipas (\f{Fan Affinity Laws}). Bhattacharjee (2012) memberikan derivasi hukum ini menggunakan pendekatan \f{Hard Sphere Collision Model} dan teori kinetik, yang memandang interaksi antara baling-baling kipas dan molekul udara sebagai tumbukan fisik, bukan dinamika fluida yang kompleks.
+
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{assets/pics/korelasi_airflow_rpm.png}
+    \caption{Visualisasi Korelasi Laju Aliran Udara dan Kecepatan Rotasi Kipas}
+    \label{fig:korelasiAirflowRPM}
+\end{figure}
+
+Menurut model tumbukan ini, laju aliran volumetrik (Q atau V) berbanding lurus dengan kecepatan rotasi ($\omega$ atau RPM). Hubungan linear ini terbentuk karena kecepatan molekul udara yang didorong menjauh dari kipas bergantung secara linear pada seberapa cepat baling-baling menumbuknya. Bhattacharjee (2012) merumuskan hubungan ini dalam persamaan:
+
+\begin{align}
+    \label{equ:fanLaw}
+    V = \frac{2\pi}{3} (\sin 2\alpha) \omega R^{3}
+\end{align}
+
+Dimana:
+\begin{itemize}
+    \item V: Laju aliran volumetrik.
+    \item $\alpha$: Sudut kemiringan baling-baling (\f{blade pitch angle}).
+    \item R: Jari-jari kipas.
+    \item $\omega$: Kecepatan rotasi.
+\end{itemize}
+
+Dalam konteks perangkat keras yang digunakan pada penelitian ini, jari-jari kipas (R) dan sudut baling-baling ($\alpha$) adalah konstanta fisik yang tidak berubah. Oleh karena itu, satu-satunya variabel yang mempengaruhi laju aliran adalah kecepatan rotasi ($\omega$).
+
+Lebih lanjut, Bhattacharjee (2012) menjelaskan konsep \f{flow persistence}, di mana aliran udara yang dipicu oleh baling-baling tidak berhenti seketika, melainkan berlanjut di antara celah baling-baling, memastikan aliran terjadi di seluruh area cakram kipas. Dengan demikian, selama tegangan listrik yang disuplai ke \f{blower} dijaga stabil untuk mempertahankan RPM ($\omega$) yang konstan, maka laju aliran udara (V) juga akan konstan. Prinsip fisika ini menjadi landasan validasi untuk menghitung total massa polutan yang dibuang kendaraan selama pengujian.
+
+%-----------------------------------------------------------------------------%
+\subsection{Prinsip Laju Aliran Volumetrik Udara}
+\label{sec:volumetricFlow}
+%-----------------------------------------------------------------------------%
+Dipilihnya prinsip laju aliran udara konstan sebagai solusi dari pencarian \f{missing factor} dalam pengkonversian definisi konsentrasi suatu gas (ppm) menjadi besaran massa emisi (gram) dengan menggunakan formulasi sebagai berikut.
+
+\begin{align}
+    \label{equ:massGasCalc}
+    Massa_{gas} = (ppm \cdot 10^{-6}) \cdot Q \cdot t \cdot \rho
+\end{align}
+
+Dimana:
+\begin{itemize}
+    \item ppm: Konsentrasi gas dari sensor dalam satuan kemunculan gas per satu juta gas
+    \item 10\textsuperscript{-6}: Faktor konversi dari ppm
+    \item Q: Laju aliran udara (dalam satuan L/s)
+    \item t: Durasi waktu pengambilan data (dalam satuan s)
+    \item $\rho$ (rho): densitas gas spesifik pada suhu tertentu (dalam satuan mg/L atau g/L)
+\end{itemize}
+
+Dari setiap variabel yang tertera pada formulasi tersebut, variabel “Q” adalah satu-satunya variabel yang belum bisa didapatkan dan pilihan solusi yang dapat digunakan saat ini semuanya bersifat \f{closed system} karena memerlukan alat berupa sensor \f{Mass Air Flow} (MAF) yang mana setiap kendaraan bisa memiliki desain modelnya sendiri yang tidak bisa digunakan pada kendaraan lain. Di sisi lain, sensor MAF memiliki kekurangan berupa ketidakmampuannya untuk beroperasi pada suhu tinggi dengan kondisi udara yang tidak bersih karena intensi penggunaan sensor MAF sejatinya diaplikasikan pada bagian \f{intake} dari setiap kendaraan dan berkomunikasi hanya kepada komponen ECU dari kendaraan.
+
+Akibat keterbatasan instrumen untuk mendapatkan laju aliran udara secara langsung, diperlukan metode alternatif yang dapat menjadi representasi dari laju aliran udara yang valid. Oleh karena itu, pada penelitian kali ini digunakan metode pada lembar fakta yang dirilis oleh Canada Mortgage and Housing Corporation (CMHC) tentang pengukuran aliran udara dengan pendekatan yang aplikatif dan memiliki efisiensi daya, yang prosedurnya secara terinci akan dijelaskan pada bab selanjutnya.

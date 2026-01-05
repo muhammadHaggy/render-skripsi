@@ -1,0 +1,44 @@
+%
+% Halaman Abstrak
+%
+% @author  Andreas Febrian
+% @version 2.2.0
+% @edit by Ichlasul Affan
+%
+
+\chapter*{Abstrak}
+\singlespacing
+
+\noindent \begin{tabular}{l l p{10cm}}
+	\ifx\blank\npmDua
+		Nama&: & \penulisSatu \\
+		Program Studi&: & \programSatu \\
+	\else
+		Nama Penulis 1 / Program Studi&: & \penulisSatu~/ \programSatu\\
+		Nama Penulis 2 / Program Studi&: & \penulisDua~/ \programDua\\
+	\fi
+	\ifx\blank\npmTiga\else
+		Nama Penulis 3 / Program Studi&: & \penulisTiga~/ \programTiga\\
+	\fi
+	Judul&: & \judul \\
+	Pembimbing&: & \pembimbingSatu \\
+	\ifx\blank\pembimbingDua
+    \else
+        \ &\ & \pembimbingDua \\
+    \fi
+    \ifx\blank\pembimbingTiga
+    \else
+    	\ &\ & \pembimbingTiga \\
+    \fi
+\end{tabular} \\
+
+\vspace*{0.5cm}
+
+\noindent Dalam evolusi industri logistik menuju keberlanjutan, efisiensi operasional kini mencakup minimalisasi dampak polusi udara. Meskipun sistem rekomendasi pemuatan barang telah dikembangkan pada penelitian sebelumnya di PT XYZ, proses penentuan rute (\f{routing}) masih bersifat konvensional tanpa memperhitungkan jejak karbon. Penelitian ini bertujuan mengembangkan sistem \f{Green Vehicle Routing Problem with Time Windows} (\f{Green} VRPTW) melalui tiga kontribusi teknis yang terintegrasi. \f{Pertama}, pengembangan model prediktif untuk membangkitkan siklus berkendara (\f{drive cycle}) yang realistis, di mana pendekatan \f{Machine Learning} berbasis autoregresif dievaluasi dan dibandingkan performanya terhadap model \f{Markov Chain}. \f{Kedua}, perancangan arsitektur MLOps modern berbasis Apache Airflow dan MinIO untuk mengorkestrasi model emisi MOVESTAR dan mengintegrasikan perhitungan biaya lingkungan ke dalam infrastruktur \f{backend legacy} perusahaan. \f{Ketiga}, rekayasa perangkat keras \f{Internet of Things} (IoT) portabel yang dirancang khusus untuk akuisisi data emisi riil (\ce{CO2}, CO, HC) pada kendaraan operasional sebagai instrumen validasi \f{ground truth}. Hasil evaluasi menunjukkan sinergi dari ketiga komponen tersebut: (1) Pendekatan \f{Machine Learning} (\f{Random Forest}) terbukti lebih unggul dalam mereplikasi dinamika berkendara dengan nilai $R^2$ sebesar 0.9806 untuk kecepatan dan \f{root mean square error} (RMSE) distribusi beban mesin (VSP) yang rendah (0.016); (2) Infrastruktur sistem berhasil mengotomatisasi rekomendasi rute ramah lingkungan secara \f{end-to-end}; dan (3) Validasi perangkat \f{IoT} menunjukkan bahwa model estimasi memiliki tingkat akurasi yang dapat diandalkan dengan \f{Relative Error Total} sebesar 25,13\% dan RMSE sebesar 1,65 g/s. \\
+
+\vspace*{0.2cm}
+
+\noindent Kata kunci: \\ \f{Green} VRPTW, MOVESTAR, \f{Machine Learning}, \f{Markov Chain}, MLOps, \f{Internet of Things} (IoT), estimasi emisi \\
+
+\setstretch{1.4}
+\newpage

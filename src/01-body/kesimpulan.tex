@@ -1,0 +1,31 @@
+%---------------------------------------------------------------
+\chapter{\kesimpulan}
+\label{bab:6}
+%---------------------------------------------------------------
+Pada Bab Kesimpulan dan Saran akan dijelaskan mengenai rekapitulasi dari proses penelitian yang dilakukan. Rekapitulasi ini akan mencakup kesimpulan dari penelitian dan saran untuk pengembangan penelitian selanjutnya.
+
+%-----------------------------------------------------------------------------%
+\section{Kesimpulan}
+\label{sec:kesimpulanAkhir}
+%-----------------------------------------------------------------------------%
+Dalam penelitian ini, telah berhasil disimpulkan bahwa pengembangan sistem \f{Green} VRPTW berhasil diimplementasikan secara menyeluruh (\f{end-to-end}) dengan menggunakan arsitektur MLOps yang terintegrasi. Penelitian ini berhasil mentransformasi sistem logistik warisan (\f{legacy}) menjadi sistem yang memperhitungkan emisi lingkungan dengan menambahkan kapabilitas prediksi emisi. Integrasi antara infrastruktur MLOps, yang menggunakan Apache Airflow dan MinIO pada server GPU, dan sistem \f{backend} logistik (Django) berjalan efektif melalui komunikasi asinkronus. Sistem ini mampu memberikan rekomendasi rute berdasarkan optimasi emisi karbon, yang kemudian divisualisasikan secara interaktif pada antarmuka pengguna.
+
+Pendekatan \f{machine learning} terbukti lebih unggul dibandingkan dengan Markov Chain dalam membangkitkan profil berkendara untuk keperluan estimasi emisi. Berdasarkan hasil evaluasi perbandingan model pada Skenario Pengujian I, pendekatan \f{machine learning} berbasis \f{autoregressive} (Random Forest) menunjukkan performa yang lebih baik daripada model probabilistik Markov Chain. Model ML mampu mereplikasi dinamika kecepatan dengan korelasi yang kuat dan menghasilkan distribusi beban mesin (\f{Vehicle Specific Power} - VSP) yang sangat akurat dengan nilai RMSE distribusi VSP sebesar 0,016. Akurasi ini memastikan bahwa \f{input} yang masuk ke dalam model perhitungan emisi MOVESTAR merepresentasikan kondisi beban mesin yang realistis.
+
+Selanjutnya, model MOVESTAR memiliki tingkat keandalan yang memadai untuk estimasi emisi logistik dalam konteks komparasi rute. Validasi lapangan menggunakan perangkat IoT portabel pada sepeda motor Yamaha NMAX menunjukkan bahwa model mampu menangkap tren fluktuasi emisi secara makroskopis, meskipun korelasi statistik dibatasi oleh kendala fisik sensor berupa \f{time lag} dan perbedaan responsivitas. Dengan nilai RMSE 1,65 g/s dan karakteristik estimasi total emisi yang bersifat konservatif (\f{overestimation}), model terbukti valid sebagai indikator relatif dalam algoritma penentuan rute, yang cukup untuk membedakan rute ramah lingkungan dari rute konvensional tanpa memerlukan presisi absolut alat uji standar laboratorium.
+
+Hasil analisis menunjukkan bahwa perbedaan nilai RMSE antara model Markov Chain dan \f{machine learning} (ML) berpengaruh signifikan terhadap akurasi estimasi emisi, mengingat sensitivitas faktor emisi MOVESTAR terhadap ketepatan distribusi beban mesin (VSP Bins). Model ML-AR terbukti jauh lebih unggul dalam mereplikasi profil fisik pergerakan kendaraan karena mampu menghasilkan distribusi VSP yang hampir identik dengan data riil, meskipun model Markov tetap memadai untuk estimasi emisi skala makroskopik. Kemampuan model ML dalam menjaga stabilitas distribusi pada rentang beban tinggi maupun kondisi \f{coasting} memastikan estimasi polutan yang lebih presisi pada level mikroskopik, sehingga menjadikannya pilihan model terbaik untuk simulasi rute yang memerlukan representasi fisik beban mesin paling mendekati realitas lapangan.
+
+%-----------------------------------------------------------------------------%
+\section{Saran}
+\label{sec:saranAkhir}
+%-----------------------------------------------------------------------------%
+Berdasarkan hasil penelitian dan kendala yang dihadapi, disarankan beberapa fokus pengembangan untuk penelitian berikutnya.
+
+Pertama, perlu dilakukan ekspansi jenis kendaraan ke armada truk logistik. Meskipun validasi saat ini telah berhasil dilakukan pada sepeda motor (NMAX) sebagai bukti konsep, arsitektur sistem \f{Green} VRPTW telah dirancang bersifat agnostik terhadap jenis kendaraan. Oleh karena itu, penelitian selanjutnya disarankan untuk melakukan pengambilan data dan kalibrasi koefisien MOVESTAR secara spesifik pada armada truk (seperti CDE/CDD) agar sistem \f{Green} VRPTW dapat diterapkan secara penuh pada operasional pengiriman barang skala besar.
+
+Kedua, disarankan implementasi sistem komunikasi \f{real-time} pada perangkat sistem IoT. Saat ini, mekanisme perpindahan data dari perangkat sistem IoT ke infrastruktur penyimpanan data masih dilakukan secara manual menggunakan SD Card. Hal ini menyebabkan sistem IoT tidak dapat beroperasi secara \f{real-time} dengan server, yang pada akhirnya membatasi algoritma \f{machine learning} untuk berjalan secara \f{real-time}. Untuk mengatasi hal ini, disarankan untuk mengimplementasikan sistem komunikasi antara sistem IoT dengan \f{data lake} dengan memanfaatkan protokol MQTT yang dilengkapi mekanisme \f{store and forward}.
+
+Ketiga, penting untuk implementasi sistem \f{geolocation} pada Perangkat Sistem IoT. Sistem IoT yang telah diimplementasikan belum menggunakan sistem \f{geolocation} yang terintegrasi, sehingga perangkat keras tidak memiliki kapabilitas otonom untuk melacak posisi spasial dan kecepatan kendaraan secara \f{real-time}. Disarankan untuk mengintegrasikan sistem akuisisi data geospasial (GNSS) sehingga ketergantungan pengambilan data terkait menggunakan \f{smartphone} dapat dihilangkan, yang sekaligus akan mempermudah proses sinkronisasi data \f{geolocation} dengan data emisi dari perangkat IoT.
+
+Terakhir, perlu dilakukan pengembangan algoritma \f{Multi Objective Optimization}. Saat ini, sistem memisahkan optimasi waktu dan emisi secara biner. Penelitian selanjutnya dapat mengembangkan fungsi biaya gabungan atau optimasi Pareto untuk mencari rute yang menawarkan keseimbangan terbaik antara efisiensi waktu dan penghematan emisi.
